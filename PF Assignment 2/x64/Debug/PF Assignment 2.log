@@ -1,0 +1,7 @@
+﻿  main.cc
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\main.cc(10,77): warning C4244: 'argument': conversion from '_Rep' to 'unsigned int', possible loss of data
+          with
+          [
+              _Rep=__int64
+          ]
+  PF Assignment 2.vcxproj -> C:\Users\maste\source\repos\PF Assignment 2\x64\Debug\PF Assignment 2.exe
