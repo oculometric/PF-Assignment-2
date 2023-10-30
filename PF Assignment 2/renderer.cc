@@ -99,6 +99,7 @@ void renderer::draw_objects()
 		// TODO: multiline sprite rendering
 	}
 	// TODO: render enemies
+	// TODO: render player
 }
 
 renderer::renderer(ivector2 viewport)
@@ -228,4 +229,9 @@ void renderer::blit()
 		else cout << ' ';
 		if (i % viewport_size.x == viewport_size.x-1) cout << endl;
 	}
+}
+
+void renderer::set_player(player* _player)
+{
+	game_player = _player;
 }

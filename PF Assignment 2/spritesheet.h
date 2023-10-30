@@ -4,8 +4,9 @@
 static const char* spritesheet[128] =
 {
 	u8"█",		// pillar
-	u8"+",		// health pickup
+	  "+",		// health pickup
 	u8"▒"		// translucent pillar
+	  "@"		// player
 };
 
 /* this should be formatted as follows :

@@ -14,4 +14,6 @@ inline ivector2 operator/ (ivector2 a, ivector2 b) { return ivector2{ a.x / b.x,
 inline ivector2 operator+ (ivector2 a, ivector2 b) { return ivector2{ a.x + b.x, a.y + b.y }; }
 inline ivector2 operator- (ivector2 a, ivector2 b) { return ivector2{ a.x - b.x, a.y - b.y }; }
 
+inline int magnitude_squared (ivector2 a) { return (a.x * a.x) + (a.y * a.y); }
+
 #endif

@@ -1,8 +1,11 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+class object;
+
 #include "ivector2.h"
 #include "player.h"
+#include "physics.h"
 
 class object
 {
@@ -14,6 +17,8 @@ public:
 	virtual unsigned int spritesheet_id() { return -1; }
 	// should return the size of this object's hitbox (likely to be the same size as its sprite)
 	ivector2 hitbox_size() { return ivector2{}; }
+	// should return the collision layer for which this object's hitbox exists
+	virtual unsigned char hitbox_layer() { return 0; }
 
 	// should return whether or not the player can walk onto this tile, and handle the collision
 	bool contact_player(player* player_pointer) { return false; }
@@ -26,12 +31,15 @@ public:
 	{
 		position = { _x, _y };
 	}
+
+	object() {};
 };
 
 class solid_pillar : public object
 {
 	unsigned int spritesheet_id() { return 0; }
 	ivector2 hitbox_size() { return ivector2{ 1, 1 }; }
+	unsigned char hitbox_layer() { return LAYER_OBSTACLE; }
 
 	bool contact_player(player* player_pointer) { return true; }
 	void after_spawn() {};
@@ -44,6 +52,7 @@ class transparent_pillar : public object
 {
 	unsigned int spritesheet_id() { return 2; }
 	ivector2 hitbox_size() { return ivector2{ 1, 1 }; }
+	unsigned char hitbox_layer() { return LAYER_OBSTACLE; }
 
 	bool contact_player(player* player_pointer) { return true; }
 	void after_spawn() {};
@@ -56,6 +65,7 @@ class health_pickup : public object
 {
 	unsigned int spritesheet_id() { return 1; }
 	ivector2 hitbox_size() { return ivector2{ 1, 1 }; }
+	unsigned char hitbox_layer() { return LAYER_PICKUP; }
 
 	bool contact_player(player* player_pointer) { player_pointer->health = player_pointer->max_health; return false; }
 	void after_spawn() {};

@@ -2,17 +2,27 @@
 #define PLAYER_H
 
 #include "ivector2.h"
+#include "game.h"
+#include "object.h"
+#include "physics.h"
 
-class player
+class player : object
 {
 public:
-	ivector2 position;
-	unsigned int spritesheet_id;
-
 	unsigned int health;
 	unsigned int max_health;
 
-	// TODO
+	unsigned char facing = 0;
+
+	float invincibility_timer = 0.0;
+	float attack_timer = 0.0;
+
+	void tick(float, game*);
+
+	bool receive_damage(unsigned int, object*);
+	void perform_attack();
+
+	player(int, int);
 };
 
 #endif

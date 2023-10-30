@@ -27,6 +27,8 @@ public:
 	void draw_sprite(ivector2, const unsigned char*);
 	void blit();
 
+	void set_player(player* _player);
+
 	renderer (ivector2);
 
 private:
@@ -41,6 +43,8 @@ private:
 	vector<enemy*> enemies;
 
 	uint32_t* backbuffer;
+
+	player* game_player;
 };
 
 #endif

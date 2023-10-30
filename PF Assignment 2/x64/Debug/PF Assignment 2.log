@@ -1,7 +1,63 @@
-﻿  main.cc
-C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\main.cc(10,77): warning C4244: 'argument': conversion from '_Rep' to 'unsigned int', possible loss of data
+﻿  game.cc
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(7,16): error C2504: 'object': base class undefined
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(18,19): error C2061: syntax error: identifier 'game'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(20,36): error C2061: syntax error: identifier 'object'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\enemy.h(8,27): error C2061: syntax error: identifier 'renderer'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(9,77): warning C4244: 'argument': conversion from '_Rep' to 'unsigned int', possible loss of data
           with
           [
               _Rep=__int64
           ]
-  PF Assignment 2.vcxproj -> C:\Users\maste\source\repos\PF Assignment 2\x64\Debug\PF Assignment 2.exe
+  input_handler.cc
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\winnt.h(169,1): fatal  error C1189: #error:  "No Target Architecture"
+  main.cc
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(7,16): error C2504: 'object': base class undefined
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(18,19): error C2061: syntax error: identifier 'game'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(20,36): error C2061: syntax error: identifier 'object'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\enemy.h(8,27): error C2061: syntax error: identifier 'renderer'
+  player.cc
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\object.h(19,22): error C2061: syntax error: identifier 'player'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\object.h(38,22): error C2061: syntax error: identifier 'player'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\object.h(50,22): error C2061: syntax error: identifier 'player'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\object.h(62,22): error C2061: syntax error: identifier 'player'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\object.h(62,48): error C2065: 'player_pointer': undeclared identifier
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\object.h(62,73): error C2065: 'player_pointer': undeclared identifier
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\enemy.h(8,27): error C2061: syntax error: identifier 'renderer'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(30,18): error C2061: syntax error: identifier 'player'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(47,8): error C2143: syntax error: missing ';' before '*'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(47,8): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(47,21): error C2238: unexpected token(s) preceding ';'
+  renderer.cc
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(17,8): error C2143: syntax error: missing ';' before '*'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(17,8): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(17,20): error C2238: unexpected token(s) preceding ';'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(24,30): error C2061: syntax error: identifier 'renderer'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(25,30): error C2061: syntax error: identifier 'renderer'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(25,14): error C2535: 'bool physics::check_collision(void)': member function already defined or declared
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(24,14): message : see declaration of 'physics::check_collision'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(26,24): error C2061: syntax error: identifier 'renderer'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(27,24): error C2061: syntax error: identifier 'renderer'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.h(14,10): error C2143: syntax error: missing ';' before '*'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.h(14,10): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.h(14,25): error C2238: unexpected token(s) preceding ';'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(7,16): error C2504: 'object': base class undefined
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(20,36): error C2061: syntax error: identifier 'object'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\enemy.h(8,27): error C2061: syntax error: identifier 'renderer'
+  room.cc
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(26,27): error C2061: syntax error: identifier 'string'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(30,18): error C2061: syntax error: identifier 'player'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(42,8): error C2143: syntax error: missing ';' before '<'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(42,8): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(42,25): error C2238: unexpected token(s) preceding ';'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(43,8): error C2143: syntax error: missing ';' before '<'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(43,8): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(43,24): error C2238: unexpected token(s) preceding ';'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(47,8): error C2143: syntax error: missing ';' before '*'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(47,8): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\renderer.h(47,21): error C2238: unexpected token(s) preceding ';'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(17,8): error C2143: syntax error: missing ';' before '*'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(17,8): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\physics.h(17,20): error C2238: unexpected token(s) preceding ';'
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(7,16): error C2504: 'object': base class undefined
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\player.h(20,36): error C2061: syntax error: identifier 'object'
+  Generating Code...
