@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "ivector2.h"
+#include "room.h"
 
 using namespace std;
 
@@ -26,6 +27,8 @@ private:
 
 	// size of the canvas in width and height
 	ivector2 canvas_size;
+	// length of the buffer to save recalculating it
+	unsigned int canvas_length;
 
 public:
 	// getter for canvas_size
