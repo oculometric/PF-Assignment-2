@@ -31,6 +31,9 @@ struct player_data
 // where the mainloop of the game happens
 void game_main();
 
+// load the tutorial level
+void load_tutorial();
+
 // update all the bombs in a list (reducing their timers, drawing them to the render buffer)
 void update_bombs(list<bomb*>*, render_data*);
 

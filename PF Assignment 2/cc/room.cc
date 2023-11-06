@@ -49,3 +49,21 @@ void read_multichars_to_buffer(char* multichars, uint32_t* buffer, bool skip_spa
 		}
 	}
 }
+
+unsigned char get_room_doors(ivector2 position)
+{
+	ivector2 door_offset = room_offset * 2;
+	ivector2 bottom_offset = door_offset + ivector2{ 1, 0 };
+	ivector2 top_offset = door_offset + ivector2{ 1, 2 };
+	ivector2 left_offset = door_offset + ivector2{ 0,1 };
+	ivector2 right_offset = door_offset + ivector2{ 2,1 };
+
+	bool door_top = get_seed(top_offset) % 2;
+	bool door_bottom = get_seed(bottom_offset) % 2;
+	bool door_left = get_seed(left_offset) % 2;
+	bool door_right = get_seed(right_offset) % 2;
+
+	unsigned char door_configuration = (door_right << 3) | (door_left << 2) | (door_bottom << 1) | (door_top << 0);
+
+	return door_configuration;
+}
