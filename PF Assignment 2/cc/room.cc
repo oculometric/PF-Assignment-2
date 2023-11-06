@@ -1,6 +1,6 @@
 #include "room.h"
 
-void read_multichars_to_buffer(char* multichars, uint32_t* buffer, int newline_skipahead)
+void read_multichars_to_buffer(char* multichars, uint32_t* buffer, bool skip_spaces)
 {
 	uint32_t char_to_write = 0;
 	int unicode_chars_expected = 0;
@@ -9,9 +9,13 @@ void read_multichars_to_buffer(char* multichars, uint32_t* buffer, int newline_s
 	{
 		char c = multichars[i];
 		if (c == '\0') break;
-		if (c == '\n')
+		if (c == '\n' && unicode_chars_expected != 0)
 		{
-			i += newline_skipahead;
+			continue;
+		}
+		if (c == ' ' && skip_spaces && unicode_chars_expected != 0)
+		{
+			char_offset++;
 			continue;
 		}
 
