@@ -15,58 +15,40 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="renderer.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="room.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ivector2.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="input_handler.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="player.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="game.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="room.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="renderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="object.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ivector2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="spritesheet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="enemy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="input_handler.h">
+    <ClInclude Include="bomb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="physics.h">
+    <ClInclude Include="ivector2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="random_provider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="render_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="room.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="game.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="render_data.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="room.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

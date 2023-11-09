@@ -1,5 +1,6 @@
-#ifndef IVECTOR2_H
-#define IVECTOR2_H
+#pragma once
+
+using namespace std;
 
 struct ivector2
 {
@@ -15,5 +16,4 @@ inline ivector2 operator+ (ivector2 a, ivector2 b) { return ivector2{ a.x + b.x,
 inline ivector2 operator- (ivector2 a, ivector2 b) { return ivector2{ a.x - b.x, a.y - b.y }; }
 
 inline int magnitude_squared (ivector2 a) { return (a.x * a.x) + (a.y * a.y); }
-
-#endif
+inline ivector2 clamp(ivector2 c, ivector2 vmax, ivector2 vmin) { return ivector2{ min(max(c.x, vmin.x), vmax.x), min(max(c.y, vmin.y), vmax.y) }; }

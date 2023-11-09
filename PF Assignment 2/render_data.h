@@ -32,19 +32,19 @@ private:
 
 public:
 	// getter for canvas_size
-	inline ivector2 get_size();
+	ivector2 get_size();
 
 	// get the character at a tile, with overloads in case we want to do things quicker (precompute index)
-	inline uint32_t get_tile(layer, ivector2);
-	inline uint32_t get_tile(layer, unsigned int);
+	uint32_t get_tile(layer, ivector2);
+	uint32_t get_tile(layer, unsigned int);
 
 	// set the character at a tile, with overloads in case we want to do things quicker (precompute index)
-	inline void set_tile(layer, ivector2, uint32_t);
-	inline void set_tile(layer, unsigned int, uint32_t);
+	void set_tile(layer, ivector2, uint32_t);
+	void set_tile(layer, unsigned int, uint32_t);
 
 	// write a line of characters (multibyte chars are read into single uint32_t values), with overloads in case we want to do things quicker (precompute index). boolean for whether to jump over spaces
-	inline void set_tiles(layer, ivector2, string, bool);
-	inline void set_tiles(layer, unsigned int, string, bool);
+	void set_tiles(layer, ivector2, string, bool);
+	void set_tiles(layer, unsigned int, string, bool);
 
 	// read and write entire layers from another buffer, allows us to make backup copies of rooms. make sure your buffer is big enough!
 	void write_buffer(layer, uint32_t*);
