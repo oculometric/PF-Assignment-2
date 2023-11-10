@@ -5,6 +5,14 @@ using namespace std;
 struct ivector2
 {
 	int x, y;
+
+    bool operator()(const ivector2& lhs, const ivector2& rhs)
+    {
+        if (lhs.x < rhs.x) return  true;
+        if (lhs.x == rhs.x && lhs.y < rhs.y) return true;
+
+        return false;
+    }
 };
 
 inline ivector2 operator* (ivector2 a, int i) { return ivector2{ a.x * i, a.y * i }; }

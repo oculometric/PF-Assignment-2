@@ -1,6 +1,6 @@
 #pragma once
 
-#include <list>
+#include <map>
 
 #include "ivector2.h"
 #include "bomb.h"
@@ -28,8 +28,10 @@ void game_main();
 // draw doorways based on room position
 void draw_doorways(ivector2, render_data*);
 
+#define TRANSITION_DELAY 300
+
 // check for and handle the player exiting the current room
-ivector2 handle_door_transition(player_data*, render_data*, random_provider*, vector<cached_room*>*);
+ivector2 handle_door_transition(player_data*, render_data*, random_provider*, map<ivector2, cached_room*>*, ivector2, vector<bomb*>*, uint32_t**, uint32_t**);
 
 // check the state of all the keys and put the results into a struct
 void check_key_states(key_states&);

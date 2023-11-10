@@ -21,7 +21,7 @@ void game_main()
 	ivector2 room		= { 0,1 };
 	random_provider* rp = new random_provider(get_seed(room));
 	vector<bomb*> bombs;
-	vector<cached_room*> rooms;
+	map<ivector2, cached_room*> rooms;
 
 	// set up player
 	pd->max_health = 5;
@@ -42,6 +42,14 @@ void game_main()
 		room_designs[i] = new uint32_t[c_size.x * c_size.y];
 		read_multichars_to_buffer((char*)room_walls, room_designs[i], false);
 		read_multichars_to_buffer((char*)room_layouts[i], room_designs[i], true);
+	}
+
+	// load buffers of transition frames
+	uint32_t* transition_frames[NUM_TRANSITIONS] = { NULL };
+	for (int i = 0; i < NUM_TRANSITIONS; i++)
+	{
+		transition_frames[i] = new uint32_t[c_size.x * c_size.y];
+		read_multichars_to_buffer((char*)transition_buffers[i], transition_frames[i], false);
 	}
 
 	// load tutorial room
@@ -84,7 +92,7 @@ void game_main()
 			if (bg != 0 && bg != ' ') pd->position = old_position;
 
 			// handle door transitions
-			room = handle_door_transition(pd, rd, rp, &rooms);
+			room = handle_door_transition(pd, rd, rp, &rooms, room, &bombs, room_designs, transition_frames);
 		}
 		else if (ks.attack)
 		{
@@ -254,9 +262,86 @@ void draw_doorways(ivector2 room_position, render_data* rd)
 	}
 }
 
-ivector2 handle_door_transition(player_data* pd, render_data* rd, random_provider* rp, vector<cached_room*>* rooms)
+ivector2 handle_door_transition(player_data* pd, render_data* rd, random_provider* rp, map<ivector2, cached_room*>* rooms, ivector2 room, vector<bomb*>* bombs, uint32_t** room_designs, uint32_t** transition_frames)
 {
-	// TODO THIS
+	ivector2 rd_size = rd->get_size();
+	ivector2 transition_direction{ 0, 0 };
+	if (pd->position.y <= 1) transition_direction.y = -1;
+	if (pd->position.x <= 1) transition_direction.x = -1;
+	if (pd->position.y >= rd_size.y - 2) transition_direction.y = 1;
+	if (pd->position.x >= rd_size.x - 2) transition_direction.x = 1;
+
+	if (transition_direction.x == 0 && transition_direction.y == 0) return room;
+
+	ivector2 new_room = room + transition_direction;
+
+	// cache bombs
+	vector<bomb*>* cached_bombs = new vector<bomb*>();
+	for (bomb* b : *bombs) cached_bombs->push_back(b);
+	bombs->clear();
+
+	// cache foreground
+	uint32_t* fg = new uint32_t[rd_size.x * rd_size.y];
+	rd->write_buffer(layer::FOREGROUND, fg);
+
+	// cache the current room
+	cached_room* cr = new cached_room
+	{
+		room,
+		fg,
+		cached_bombs
+	};
+
+	auto cached_old_ptr = rooms->find(room);
+	if (cached_old_ptr == rooms->end())
+	{
+		rooms->insert({ room, cr });
+	}
+	else
+	{
+		// deallocate previous cached room, then insert
+		delete cached_old_ptr->second->bombs;
+		delete cached_old_ptr->second->foreground_layer;
+		delete cached_old_ptr->second;
+		rooms->insert({ room, cr });
+	}
+
+	// transition
+	for (int i = 0; i < NUM_TRANSITIONS; i++)
+	{
+		rd->read_buffer(layer::OVERLAY, transition_frames[i]);
+		this_thread::sleep_for(chrono::milliseconds(TRANSITION_DELAY));
+		rd->draw(cout);
+	}
+
+	auto cached_ptr = rooms->find(new_room);
+	if (cached_ptr == rooms->end())
+	{
+		// TODO: Generate the room fresh
+	}
+	else
+	{
+		// load the room from cache
+		rd->read_buffer(layer::FOREGROUND, cached_ptr->second->foreground_layer);
+		for (bomb* b : *(cached_ptr->second->bombs))
+			bombs->push_back(b);
+	}
+
+	// load room based on seed
+	rd->read_buffer(layer::BACKGROUND, room_designs[get_seed(new_room)%NUM_ROOM_LAYOUTS]);
+
+	// transition out again
+	for (int i = NUM_TRANSITIONS-1; i >= 0; i--)
+	{
+		rd->read_buffer(layer::OVERLAY, transition_frames[i]);
+		this_thread::sleep_for(chrono::milliseconds(TRANSITION_DELAY));
+		rd->draw(cout);
+	}
+
+	// TODO: set player pos
+
+	
+	return new_room;
 }
 
 void check_intersection(player_data* pd, render_data* rd)
