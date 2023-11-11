@@ -43,7 +43,7 @@ void update_bombs(vector<bomb*>*, render_data*, random_provider*);
 void explode_bomb(ivector2, int, render_data*, random_provider*);
 
 // probability definitions for different types of item dropped by goop when it dies
-#define HEALTH_PICKUP_CHANCE 0.1
+#define HEALTH_PICKUP_CHANCE 0.05
 #define BOMB_PICKUP_CHANCE 0.1
 #define HEALTH_UPGRADE_CHANCE 0.02
 #define RANGE_UPGRADE_CHANCE 0.01
@@ -54,7 +54,7 @@ void explode_bomb(ivector2, int, render_data*, random_provider*);
 #define DROP_DIV_3 DROP_DIV_2 + RANGE_UPGRADE_CHANCE
 
 // probability that a goop tile will grow on a particular update
-#define GOOP_GROW_CHANCE 0.3
+#define GOOP_GROW_CHANCE 0.15
 
 // try to drop a pickup (bomb, health, max health, range) at the targeted tile
 void try_drop_pickup(ivector2, render_data*, random_provider*, uint32_t);
@@ -112,3 +112,6 @@ void hide_cursor();
 // converting between direction formats
 ivector2 direction(int);
 int direction(ivector2);
+
+// clamp an int between two other ints
+unsigned int clamp(unsigned int, unsigned int, unsigned int);

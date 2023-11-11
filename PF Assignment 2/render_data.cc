@@ -1,5 +1,12 @@
 #include "render_data.h"
 
+#include "game.h"
+
+void render_data::set_draw_offset(ivector2 v)
+{
+	draw_offset = v;
+}
+
 ivector2 render_data::get_size()
 {
 	return canvas_size;
@@ -143,6 +150,7 @@ void render_data::clear_layer(layer l)
 
 void render_data::draw(ostream& s)
 {
+	set_cursor_pos(draw_offset);
 	for (unsigned int i = 0; i < canvas_length; i++)
 	{
 		uint32_t* buffer = overlay_layer;
@@ -178,6 +186,7 @@ render_data::render_data(ivector2 v)
 {
 	canvas_length = v.x * v.y;
 	canvas_size = v;
+	draw_offset = ivector2{ 0,0 };
 
 	background_layer = new uint32_t[canvas_length];
 	foreground_layer = new uint32_t[canvas_length];

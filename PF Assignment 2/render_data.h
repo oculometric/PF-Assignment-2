@@ -29,8 +29,13 @@ private:
 	ivector2 canvas_size;
 	// length of the buffer to save recalculating it
 	unsigned int canvas_length;
+	// terminal offset for drawing the room to the screen
+	ivector2 draw_offset;
 
 public:
+	// set drawing offset
+	void set_draw_offset(ivector2);
+
 	// getter for canvas_size
 	ivector2 get_size();
 

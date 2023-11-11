@@ -12,7 +12,6 @@ void game_main()
 {
 	system("chcp 65001");
 	hide_cursor();
-	set_cursor_pos(ivector2{ 0,0 });
 
 	// initial configuration
 	ivector2 c_size		= ivector2{ 45, 21 };
@@ -122,7 +121,6 @@ void game_main()
 		update_overlay_text(pd, rd, room);
 
 		// reset cursor and draw screen
-		set_cursor_pos(ivector2{ 0,0 });
 		rd->draw(cout);
 
 		if (pd->health == 0) break;
@@ -145,7 +143,6 @@ void game_main()
 	string text_2 = "YOU ARE DEAD";
 	rd->set_tiles(layer::OVERLAY, ivector2{ center.x - (int)(text_1.size() / 2), center.y - 1 }, text_1, false);
 	rd->set_tiles(layer::OVERLAY, ivector2{ center.x - (int)(text_2.size() / 2), center.y + 1 }, text_2, false);
-	set_cursor_pos(ivector2{ 0,0 });
 	rd->draw(cout);
 
 	for (int i = 0; i < 2; i++)
@@ -156,7 +153,6 @@ void game_main()
 			if (tile != BLOCK) rd->set_tile(layer::BACKGROUND, t, tile+1);
 		}
 		this_thread::sleep_for(chrono::seconds(1));
-		set_cursor_pos(ivector2{ 0,0 });
 		rd->draw(cout);
 	}
 
@@ -329,6 +325,7 @@ ivector2 handle_door_transition(player_data* pd, render_data* rd, random_provide
 
 	// load room based on seed
 	rd->read_buffer(layer::BACKGROUND, room_designs[get_seed(new_room)%NUM_ROOM_LAYOUTS]);
+	draw_doorways(new_room, rd);
 
 	// transition out again
 	for (int i = NUM_TRANSITIONS-1; i >= 0; i--)
@@ -338,9 +335,12 @@ ivector2 handle_door_transition(player_data* pd, render_data* rd, random_provide
 		rd->draw(cout);
 	}
 
-	// TODO: set player pos
+	rd->clear_layer(layer::OVERLAY);
+	this_thread::sleep_for(chrono::milliseconds(TRANSITION_DELAY));
+	rd->draw(cout);
 
-	
+	pd->position = (((transition_direction*2) + rd_size) % rd_size) + ((rd_size / 2) * (ivector2{ 1,1 } - abs(transition_direction)));
+	pd->position = pd->position - ivector2{ transition_direction.x == -1, transition_direction.y == -1 };
 	return new_room;
 }
 
@@ -364,7 +364,7 @@ void check_intersection(player_data* pd, render_data* rd)
 	if (is_bomb_pickup(tile)) { pd->bombs++; clear_tile = true; }
 
 	// intersection with health pickup
-	if (is_health_pickup(tile)) { pd->health += 3; pd->invincibility_timer = 3; clear_tile = true; }
+	if (is_health_pickup(tile)) { pd->health = clamp(pd->health + 3, 0, pd->max_health); pd->invincibility_timer = 1; clear_tile = true; }
 
 	// intersection with max health upgrade
 	if (is_health_upgrade(tile)) { pd->max_health++; clear_tile = true; }
@@ -541,4 +541,9 @@ int direction(ivector2 dir)
 		else return 0;
 	}
 	return 0;
+}
+
+unsigned int clamp(unsigned int x, unsigned int a, unsigned int b)
+{
+	return max(min(x, b), a);
 }
