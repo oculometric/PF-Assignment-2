@@ -31,7 +31,7 @@ void draw_doorways(ivector2, render_data*);
 #define TRANSITION_DELAY 300
 
 // check for and handle the player exiting the current room
-ivector2 handle_door_transition(player_data*, render_data*, random_provider*, map<ivector2, cached_room*>*, ivector2, vector<bomb*>*, uint32_t**, uint32_t**);
+ivector2 handle_door_transition(player_data*, render_data*, random_provider*, ivector2, vector<bomb*>*, uint32_t**, uint32_t**);
 
 // check the state of all the keys and put the results into a struct
 void check_key_states(key_states&);

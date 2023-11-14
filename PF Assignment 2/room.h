@@ -14,19 +14,6 @@ using namespace std;
 
 typedef unsigned long long int huge_uint;
 
-// struct to hold cached data about a room that has been loaded, so that the room persists (does not reset) after the player leaves it
-struct cached_room
-{
-	// the offset of this room in the global room grid
-	ivector2 room_offset;
-
-	// copy of the foreground layer for persistence
-	uint32_t* foreground_layer = NULL;
-
-	// list of bombs for persistence
-	vector<bomb*>* bombs = NULL;
-};
-
 // read a sequence of characters and put the result in a databuffer, combining multibyte characters into single data elements. make sure your destination buffer is big enough!
 void read_multichars_to_buffer(char*, uint32_t*, bool);
 
