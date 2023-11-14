@@ -17,6 +17,9 @@ struct player_data
 	// number of bombs the player is holding
 	unsigned int bombs;
 
+	// whether the player has a barrier held
+	bool has_barrier;
+
 	// range of the player's melee attack in tiles
 	unsigned int range;
 

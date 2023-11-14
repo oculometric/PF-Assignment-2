@@ -28,6 +28,7 @@ void game_main()
 	pd->bombs = 3;
 	pd->invincibility_timer = 0;
 	pd->position = c_size/2;
+	pd->has_barrier = true;
 
 	rd->clear_layer(layer::BACKGROUND);
 	rd->clear_layer(layer::FOREGROUND);
@@ -87,7 +88,7 @@ void game_main()
 			pd->direction = direction(move_vector);
 			pd->position = raw_next_position; //clamp(raw_next_position, ivector2{ 2,2 }, c_size - ivector2{ 3,3 });
 			uint32_t bg = rd->get_tile(layer::BACKGROUND, pd->position);
-			if (bg != 0 && bg != ' ') pd->position = old_position;
+			if (bg != 0 && bg != ' ' && bg != BARRIER) pd->position = old_position;
 
 			// handle door transitions
 			room = handle_door_transition(pd, rd, rp, room, &bombs, room_designs, transition_frames);
@@ -99,6 +100,10 @@ void game_main()
 		else if (ks.alt_attack)
 		{
 			perform_player_bomb(&bombs, pd, rd);
+		}
+		else if (ks.barrier_attack)
+		{
+			perform_player_barrier(pd, rd);
 		}
 		
 		// draw player
@@ -167,8 +172,9 @@ void check_key_states(key_states& ks)
 
 	ks.attack = GetAsyncKeyState('X') & 0x01;
 	ks.alt_attack = GetAsyncKeyState('Z') & 0x01;
+	ks.barrier_attack = GetAsyncKeyState('C') & 0x01;
 
-	ks.any = ks.move_up || ks.move_down || ks.move_left || ks.move_right || ks.attack || ks.alt_attack;
+	ks.any = ks.move_up || ks.move_down || ks.move_left || ks.move_right || ks.attack || ks.alt_attack || ks.barrier_attack;
 }
 
 void update_bombs(vector<bomb*>* bombs, render_data* rd, random_provider* rp)
@@ -218,6 +224,7 @@ void try_drop_pickup(ivector2 tile, render_data* rd, random_provider* rp, uint32
 	else if (r < DROP_DIV_1) rd->set_tile(layer::FOREGROUND, tile, BOMB_PICKUP);
 	else if (r < DROP_DIV_2) rd->set_tile(layer::FOREGROUND, tile, HEALTH_UPGRADE);
 	else if (r < DROP_DIV_3) rd->set_tile(layer::FOREGROUND, tile, RANGE_UPGRADE);
+	else if (r < DROP_DIV_4) rd->set_tile(layer::FOREGROUND, tile, BARRIER_PICKUP);
 	else rd->set_tile(layer::FOREGROUND, tile, fallback);
 }
 
@@ -407,6 +414,19 @@ void perform_player_bomb(vector<bomb*>* bombs, player_data* pd, render_data* rd)
 	pd->bombs--;
 }
 
+void perform_player_barrier(player_data* pd, render_data* rd)
+{
+	if (!pd->has_barrier) return;
+	ivector2 pos = pd->position;
+	ivector2 rd_size = rd->get_size();
+	while (pos.x < rd_size.x-1 && pos.x >= 0 && pos.y < rd_size.y-1 && pos.y >= 0)
+	{
+		rd->set_tile(layer::BACKGROUND, pos, BARRIER);
+		pos = pos + direction(pd->direction);
+	}
+	pd->has_barrier = false;
+}
+
 void update_overlay_text(player_data* pd, render_data* rd, ivector2 room)
 {
 	ivector2 rd_size = rd->get_size();
@@ -423,7 +443,7 @@ void update_overlay_text(player_data* pd, render_data* rd, ivector2 room)
 	}
 
 	// bottom 
-	string bottom = " b : " + to_string(pd->bombs) + " | r : " + to_string(pd->range) + " | i : " + to_string(pd->invincibility_timer);
+	string bottom = " b : " + to_string(pd->bombs) + " | r : " + to_string(pd->range) + " | i : " + to_string(pd->invincibility_timer) + " | q : " + to_string(pd->has_barrier ? 1 : 0);
 	rd->set_tiles(layer::OVERLAY, rd_size.x * (rd_size.y - 1), bottom, false);
 }
 
@@ -450,6 +470,11 @@ bool is_health_upgrade(uint32_t tile)
 bool is_range_upgrade(uint32_t tile)
 {
 	return tile == RANGE_UPGRADE;
+}
+
+bool is_barrier_pickup(uint32_t tile)
+{
+	return tile == BARRIER_PICKUP;
 }
 
 uint32_t advance_goop_tile(uint32_t current)

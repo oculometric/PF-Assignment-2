@@ -1,4 +1,7 @@
 ﻿  game.cc
 C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(21,52): warning C4244: 'argument': conversion from 'huge_uint' to 'unsigned int', possible loss of data
-C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(149,30): warning C4018: '<': signed/unsigned mismatch
-  PF Assignment 2.vcxproj -> C:\Users\maste\source\repos\PF Assignment 2\x64\Debug\PF Assignment 2.exe
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(106,4): error C3861: 'perform_player_barrier': identifier not found
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(154,30): warning C4018: '<': signed/unsigned mismatch
+  main.cc
+  render_data.cc
+  Generating Code...

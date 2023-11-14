@@ -18,6 +18,7 @@ struct key_states
 
 	bool attack;
 	bool alt_attack;
+	bool barrier_attack;
 
 	bool any;
 };
@@ -28,7 +29,7 @@ void game_main();
 // draw doorways based on room position
 void draw_doorways(ivector2, render_data*);
 
-#define TRANSITION_DELAY 300
+#define TRANSITION_DELAY 200
 
 // check for and handle the player exiting the current room
 ivector2 handle_door_transition(player_data*, render_data*, random_provider*, ivector2, vector<bomb*>*, uint32_t**, uint32_t**);
@@ -47,11 +48,13 @@ void explode_bomb(ivector2, int, render_data*, random_provider*);
 #define BOMB_PICKUP_CHANCE 0.1
 #define HEALTH_UPGRADE_CHANCE 0.02
 #define RANGE_UPGRADE_CHANCE 0.01
+#define BARRIER_PICKUP_CHANCE 0.02
 
 #define DROP_DIV_0 HEALTH_PICKUP_CHANCE
 #define DROP_DIV_1 DROP_DIV_0 + BOMB_PICKUP_CHANCE
 #define DROP_DIV_2 DROP_DIV_1 + HEALTH_UPGRADE_CHANCE
 #define DROP_DIV_3 DROP_DIV_2 + RANGE_UPGRADE_CHANCE
+#define DROP_DIV_4 DROP_DIV_3 + BARRIER_PICKUP_CHANCE
 
 // probability that a goop tile will grow on a particular update
 #define GOOP_GROW_CHANCE 0.15
@@ -73,6 +76,7 @@ void grow_goop_tiles(render_data*, random_provider*);
 // handle performing player input actions
 void perform_player_attack(player_data*, render_data*, random_provider*);
 void perform_player_bomb(vector<bomb*>*, player_data*, render_data*);
+void perform_player_barrier(player_data*, render_data*);
 
 // update HUD text about the player's health etc
 void update_overlay_text(player_data*, render_data*, ivector2);
@@ -83,6 +87,9 @@ bool is_bomb_pickup(uint32_t);
 bool is_health_pickup(uint32_t);
 bool is_health_upgrade(uint32_t);
 bool is_range_upgrade(uint32_t);
+bool is_barrier_pickup(uint32_t);
+
+// iterate to the next graphical version of a goop tile
 uint32_t advance_goop_tile(uint32_t);
 
 // definitions for the characters that should represent different gameplay elements
@@ -92,11 +99,13 @@ uint32_t advance_goop_tile(uint32_t);
 #define GOOP_INIT 0xe2b8aa
 
 #define BOMB_EXPLOSION '%'
+#define BARRIER 0xe29692
 #define PLAYER '@'
 #define HEALTH_PICKUP '#'
 #define HEALTH_UPGRADE '+'
 #define BOMB_PICKUP '*'
 #define RANGE_UPGRADE '^'
+#define BARRIER_PICKUP '$'
 
 #define FILLED_HEART 0xe299a5
 #define EMPTY_HEART 0xe299a1
