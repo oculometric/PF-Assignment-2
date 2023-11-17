@@ -35,6 +35,10 @@ void game_main()
 	rd->clear_layer(layer::BACKGROUND);
 	rd->clear_layer(layer::FOREGROUND);
 	rd->clear_layer(layer::OVERLAY);
+	rd->draw(cout);
+
+	// TODO: fullscreen and center
+	rd->set_draw_offset(ivector2{ 5,4 });
 
 	// load buffers of rooms
 	uint32_t* room_designs[NUM_ROOM_LAYOUTS+2] = { NULL };
@@ -455,7 +459,7 @@ void perform_player_barrier(player_data* pd, render_data* rd)
 	if (!pd->has_barrier) return;
 	ivector2 pos = pd->position;
 	ivector2 rd_size = rd->get_size();
-	while (pos.x < rd_size.x-1 && pos.x >= 0 && pos.y < rd_size.y-1 && pos.y >= 0)
+	while (pos.x < rd_size.x-1 && pos.x > 0 && pos.y < rd_size.y-1 && pos.y > 0)
 	{
 		rd->set_tile(layer::BACKGROUND, pos, BARRIER);
 		if (is_goop_tile(rd->get_tile(layer::FOREGROUND, pos)))

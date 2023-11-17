@@ -151,6 +151,8 @@ void render_data::clear_layer(layer l)
 void render_data::draw(ostream& s)
 {
 	set_cursor_pos(draw_offset);
+	string line_offset = "";
+	for (int i = 0; i < draw_offset.x; i++) line_offset += ' ';
 	for (unsigned int i = 0; i < canvas_length; i++)
 	{
 		uint32_t* buffer = overlay_layer;
@@ -178,7 +180,7 @@ void render_data::draw(ostream& s)
 			if (c0 != 0) s << c0;
 			else s << ' ';
 		}
-		if (i % canvas_size.x == canvas_size.x - 1) s << endl;
+		if (i % canvas_size.x == canvas_size.x - 1) s << endl << line_offset;
 	}
 }
 
