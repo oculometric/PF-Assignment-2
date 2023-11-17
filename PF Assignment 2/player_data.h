@@ -28,4 +28,10 @@ struct player_data
 
 	// direction the player is facing in. should only ever be 0-3, clockwise from up
 	int direction;
+
+	// how many turns the player has carried out
+	unsigned int turns;
+
+	// how many goop tiles the player has destroyed
+	unsigned int goop_cleared;
 };

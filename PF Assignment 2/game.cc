@@ -22,13 +22,15 @@ void game_main()
 	vector<bomb*> bombs;
 
 	// set up player
-	pd->max_health = 5;
-	pd->range = 2;
+	pd->max_health = PLAYER_INITIAL_HEALTH;
+	pd->range = PLAYER_INITIAL_RANGE;
 	pd->health = pd->max_health;
-	pd->bombs = 3;
+	pd->bombs = PLAYER_INITIAL_BOMBS;
 	pd->invincibility_timer = 0;
 	pd->position = c_size/2;
 	pd->has_barrier = true;
+	pd->turns = 0;
+	pd->goop_cleared = 0;
 
 	rd->clear_layer(layer::BACKGROUND);
 	rd->clear_layer(layer::FOREGROUND);
@@ -73,6 +75,8 @@ void game_main()
 		// get user input
 		while (!ks.any) check_key_states(ks);
 
+		pd->turns++;
+
 		// clear overlay
 		rd->clear_layer(layer::OVERLAY);
 
@@ -82,16 +86,22 @@ void game_main()
 		move_vector.y = ks.move_down - ks.move_up;
 		if (magnitude_squared(move_vector) > 0)
 		{
-			// set the new player tile, clamped to the size of the room
-			ivector2 raw_next_position = pd->position + move_vector;
-			ivector2 old_position = pd->position;
-			pd->direction = direction(move_vector);
-			pd->position = raw_next_position; //clamp(raw_next_position, ivector2{ 2,2 }, c_size - ivector2{ 3,3 });
-			uint32_t bg = rd->get_tile(layer::BACKGROUND, pd->position);
-			if (bg != 0 && bg != ' ' && bg != BARRIER) pd->position = old_position;
+			// turn the player
+			int new_direction = direction(move_vector);
+			if (new_direction == pd->direction)
+			{
 
-			// handle door transitions
-			room = handle_door_transition(pd, rd, rp, room, &bombs, room_designs, transition_frames);
+				// set the new player tile, clamped to the size of the room
+				ivector2 raw_next_position = pd->position + move_vector;
+				ivector2 old_position = pd->position;
+				pd->position = raw_next_position;
+				uint32_t bg = rd->get_tile(layer::BACKGROUND, pd->position);
+				if (bg != 0 && bg != ' ' && bg != BARRIER) pd->position = old_position;
+
+				// handle door transitions
+				room = handle_door_transition(pd, rd, rp, room, &bombs, room_designs, transition_frames);
+			}
+			pd->direction = direction(move_vector);
 		}
 		else if (ks.attack)
 		{
@@ -119,7 +129,7 @@ void game_main()
 		grow_goop_tiles(rd, rp);
 
 		// update bombs
-		update_bombs(&bombs, rd, rp);
+		update_bombs(&bombs, rd, rp, pd);
 
 		// update overlay text
 		update_overlay_text(pd, rd, room);
@@ -143,7 +153,7 @@ void game_main()
 	rd->clear_layer(layer::OVERLAY);
 	
 	ivector2 center = rd->get_size() / 2;
-	string text_1 = "GAME OVER";
+	string text_1 = "GAME OVER : SCORE " + to_string(calculate_score(pd));
 	string text_2 = "YOU ARE DEAD";
 	rd->set_tiles(layer::OVERLAY, ivector2{ center.x - (int)(text_1.size() / 2), center.y - 1 }, text_1, false);
 	rd->set_tiles(layer::OVERLAY, ivector2{ center.x - (int)(text_2.size() / 2), center.y + 1 }, text_2, false);
@@ -151,7 +161,7 @@ void game_main()
 
 	for (int i = 0; i < 2; i++)
 	{
-		for (unsigned int t = 0; t < rd->get_size().x * rd->get_size().y; t++)
+		for (int t = 0; t < rd->get_size().x * rd->get_size().y; t++)
 		{
 			uint32_t tile = rd->get_tile(layer::BACKGROUND, t);
 			if (tile != BLOCK) rd->set_tile(layer::BACKGROUND, t, tile+1);
@@ -177,7 +187,7 @@ void check_key_states(key_states& ks)
 	ks.any = ks.move_up || ks.move_down || ks.move_left || ks.move_right || ks.attack || ks.alt_attack || ks.barrier_attack;
 }
 
-void update_bombs(vector<bomb*>* bombs, render_data* rd, random_provider* rp)
+void update_bombs(vector<bomb*>* bombs, render_data* rd, random_provider* rp, player_data* pd)
 {
 	vector<bomb*>* new_list = new vector<bomb*>();
 	new_list->reserve(bombs->size());
@@ -187,7 +197,7 @@ void update_bombs(vector<bomb*>* bombs, render_data* rd, random_provider* rp)
 		// note from future me, yes, yes it very much does
 		b->timer--;
 		rd->set_tile(layer::FOREGROUND, b->position, b->timer + 0x30);
-		if (b->timer == 0) explode_bomb(b->position, 4, rd, rp);
+		if (b->timer == 0) explode_bomb(b->position, 4, rd, rp, pd);
 		else new_list->push_back(b);
 	}
 	if (new_list->size() != bombs->size())
@@ -197,7 +207,7 @@ void update_bombs(vector<bomb*>* bombs, render_data* rd, random_provider* rp)
 	}
 }
 
-void explode_bomb(ivector2 center, int radius, render_data* rd, random_provider* rp)
+void explode_bomb(ivector2 center, int radius, render_data* rd, random_provider* rp, player_data* pd)
 {
 	rd->set_tile(layer::FOREGROUND, center, 0);
 	for (int i = center.x - radius; i < center.x + radius; i++)
@@ -210,6 +220,7 @@ void explode_bomb(ivector2 center, int radius, render_data* rd, random_provider*
 				if (is_goop_tile(rd->get_tile(layer::FOREGROUND, ivector2{ i,j })))
 				{
 					try_drop_pickup(ivector2{ i,j }, rd, rp, 0);
+					pd->goop_cleared++;
 				}
 				rd->set_tile(layer::OVERLAY, ivector2{ i,j }, BOMB_EXPLOSION);
 			}
@@ -291,10 +302,16 @@ ivector2 handle_door_transition(player_data* pd, render_data* rd, random_provide
 		rd->draw(cout);
 	}
 
-	// TODO: Generate the room fresh
+	// get the room layout id
+	unsigned int room_layout_id = get_seed(new_room) % NUM_ROOM_LAYOUTS;
+
+	// populate the room with goop
+	generate_fresh_goop(rd, rp, room_layout_id, MAX_GOOP_INITIAL+(pd->goop_cleared/GOOP_CLEARING_RATIO));
+
+	// TODO: iterate the goop a few times
 
 	// load room based on seed
-	rd->read_buffer(layer::BACKGROUND, room_designs[get_seed(new_room)%NUM_ROOM_LAYOUTS]);
+	rd->read_buffer(layer::BACKGROUND, room_designs[room_layout_id]);
 	draw_doorways(new_room, rd);
 
 	// transition out again
@@ -337,10 +354,13 @@ void check_intersection(player_data* pd, render_data* rd)
 	if (is_health_pickup(tile)) { pd->health = clamp(pd->health + 3, 0, pd->max_health); pd->invincibility_timer = 1; clear_tile = true; }
 
 	// intersection with max health upgrade
-	if (is_health_upgrade(tile)) { pd->max_health++; clear_tile = true; }
+	if (is_health_upgrade(tile)) { pd->max_health++; pd->health++; clear_tile = true; }
 
 	// intersection with range upgrade
 	if (is_range_upgrade(tile)) { pd->range++; clear_tile = true; }
+
+	// intersection with barrier pickup
+	if (is_barrier_pickup(tile)) { pd->has_barrier = true; clear_tile = true; }
 
 	if (clear_tile) rd->set_tile(layer::FOREGROUND, pd->position, 0);
 }
@@ -386,20 +406,36 @@ void grow_goop_tiles(render_data* rd, random_provider* rp)
 	}
 }
 
+void generate_fresh_goop(render_data* rd, random_provider* rp, unsigned int room_layout_id, unsigned int max_goop_tiles)
+{
+	ivector2 rd_size = rd->get_size();
+	unsigned int buffer_length = rd_size.x * rd_size.y;
+
+	vector<unsigned int> tiles_to_goopify;
+	while (tiles_to_goopify.size() < max_goop_tiles)
+	{
+		// pick a random tile
+		unsigned int test_tile = (int)(rp->next() * buffer_length);
+		// check that goop is allowed here
+		if (goop_gen_masks[room_layout_id][test_tile] == '1') tiles_to_goopify.push_back(test_tile);
+	}
+
+	for (unsigned int t : tiles_to_goopify) rd->set_tile(layer::FOREGROUND, t, GOOP_0);
+}
+
 void perform_player_attack(player_data* pd, render_data* rd, random_provider* rp)
 {
-	uint32_t c = 0;
-	if (pd->direction == 0) c = UP_ATTACK;
-	if (pd->direction == 1) c = RIGHT_ATTACK;
-	if (pd->direction == 2) c = DOWN_ATTACK;
-	if (pd->direction == 3) c = LEFT_ATTACK;
+	uint32_t c = direction_char(pd->direction);
 
 	ivector2 pos = pd->position;
 	for (unsigned int i = 0; i < pd->range+1; i++)
 	{	
 		rd->set_tile(layer::OVERLAY, pos, c);
 		if (is_goop_tile(rd->get_tile(layer::FOREGROUND, pos)))
+		{
 			try_drop_pickup(pos, rd, rp, 0);
+			pd->goop_cleared++;
+		}
 		pos = pos + direction(pd->direction);
 	}
 }
@@ -422,6 +458,11 @@ void perform_player_barrier(player_data* pd, render_data* rd)
 	while (pos.x < rd_size.x-1 && pos.x >= 0 && pos.y < rd_size.y-1 && pos.y >= 0)
 	{
 		rd->set_tile(layer::BACKGROUND, pos, BARRIER);
+		if (is_goop_tile(rd->get_tile(layer::FOREGROUND, pos)))
+		{
+			rd->set_tile(layer::FOREGROUND, pos, 0);
+			pd->goop_cleared++;
+		}
 		pos = pos + direction(pd->direction);
 	}
 	pd->has_barrier = false;
@@ -431,7 +472,7 @@ void update_overlay_text(player_data* pd, render_data* rd, ivector2 room)
 {
 	ivector2 rd_size = rd->get_size();
 	// top left: current room
-	string top_left = " room : " + to_string(room.x) + " " + to_string(room.y);
+	string top_left = " rm : " + to_string(room.x) + " " + to_string(room.y) + " | sco : " + to_string(calculate_score(pd)) + " (" + to_string(pd->turns) + " trn)";
 	rd->set_tiles(layer::OVERLAY, 0, top_left, false);
 
 	// top right: health
@@ -443,8 +484,9 @@ void update_overlay_text(player_data* pd, render_data* rd, ivector2 room)
 	}
 
 	// bottom 
-	string bottom = " b : " + to_string(pd->bombs) + " | r : " + to_string(pd->range) + " | i : " + to_string(pd->invincibility_timer) + " | q : " + to_string(pd->has_barrier ? 1 : 0);
+	string bottom = " d :   | b : " + to_string(pd->bombs) + " | r : " + to_string(pd->range) + " | i : " + to_string(pd->invincibility_timer) + " | q : " + to_string(pd->has_barrier ? 1 : 0);
 	rd->set_tiles(layer::OVERLAY, rd_size.x * (rd_size.y - 1), bottom, false);
+	rd->set_tile(layer::OVERLAY, (rd_size.x * (rd_size.y - 1)) + 5, direction_char(pd->direction));
 }
 
 bool is_goop_tile(uint32_t tile)
@@ -531,7 +573,26 @@ int direction(ivector2 dir)
 	return 0;
 }
 
+uint32_t direction_char(int dir)
+{
+	uint32_t c = 0;
+	if (dir == 0) c = UP_ATTACK;
+	if (dir == 1) c = RIGHT_ATTACK;
+	if (dir == 2) c = DOWN_ATTACK;
+	if (dir == 3) c = LEFT_ATTACK;
+	return c;
+}
+
 unsigned int clamp(unsigned int x, unsigned int a, unsigned int b)
 {
 	return max(min(x, b), a);
+}
+
+unsigned int calculate_score(player_data* pd)
+{
+	return (pd->goop_cleared * GOOP_SCORE_MULTIPLIER) 
+		 + (pd->turns * TURNS_SCORE_MULTIPLIER)
+		 + ((pd->max_health - PLAYER_INITIAL_HEALTH) * HEALTH_SCORE_MULTIPLIER)
+		 + ((pd->range - PLAYER_INITIAL_RANGE) * RANGE_SCORE_MULTIPLER)
+		 + 100;
 }

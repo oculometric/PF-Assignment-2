@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <map>
 
@@ -23,13 +23,18 @@ struct key_states
 	bool any;
 };
 
+// player capability initial constants
+#define PLAYER_INITIAL_HEALTH 5
+#define PLAYER_INITIAL_RANGE 2
+#define PLAYER_INITIAL_BOMBS 3
+
 // where the mainloop of the game happens
 void game_main();
 
 // draw doorways based on room position
 void draw_doorways(ivector2, render_data*);
 
-#define TRANSITION_DELAY 200
+#define TRANSITION_DELAY 150
 
 // check for and handle the player exiting the current room
 ivector2 handle_door_transition(player_data*, render_data*, random_provider*, ivector2, vector<bomb*>*, uint32_t**, uint32_t**);
@@ -38,10 +43,10 @@ ivector2 handle_door_transition(player_data*, render_data*, random_provider*, iv
 void check_key_states(key_states&);
 
 // update all the bombs in a list (reducing their timers, drawing them to the render buffer)
-void update_bombs(vector<bomb*>*, render_data*, random_provider*);
+void update_bombs(vector<bomb*>*, render_data*, random_provider*, player_data*);
 
 // create a bomb explosion centered on a particular tile, with a particular radius
-void explode_bomb(ivector2, int, render_data*, random_provider*);
+void explode_bomb(ivector2, int, render_data*, random_provider*, player_data*);
 
 // probability definitions for different types of item dropped by goop when it dies
 #define HEALTH_PICKUP_CHANCE 0.05
@@ -67,6 +72,13 @@ void check_intersection(player_data*, render_data*);
 
 // iterate over all goop tiles and try to grow them into adjacent tiles
 void grow_goop_tiles(render_data*, random_provider*);
+
+// define the maximum amount of goop tiles allowed to spawn in a room, which gets increased as the game progresses
+#define MAX_GOOP_INITIAL 5
+#define GOOP_CLEARING_RATIO 30
+
+// generate a fresh room of goop for the player to fight. masked based on the room layout chosen
+void generate_fresh_goop(render_data*, random_provider*, unsigned int, unsigned int);
 
 #define UP_ATTACK 0xe2afad
 #define DOWN_ATTACK 0xe2afaf
@@ -121,6 +133,15 @@ void hide_cursor();
 // converting between direction formats
 ivector2 direction(int);
 int direction(ivector2);
+uint32_t direction_char(int);
 
 // clamp an int between two other ints
 unsigned int clamp(unsigned int, unsigned int, unsigned int);
+
+// calculate the player's score based on their number of turns and number of goop tiles destroyed
+#define GOOP_SCORE_MULTIPLIER 25
+#define TURNS_SCORE_MULTIPLIER -0.5
+#define HEALTH_SCORE_MULTIPLIER 100
+#define RANGE_SCORE_MULTIPLER 250
+
+unsigned int calculate_score(player_data*);
