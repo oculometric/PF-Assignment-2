@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <Windows.h>
+#include <set>
 
 #include "ivector2.h"
 #include "bomb.h"
@@ -45,13 +46,13 @@ struct key_states
 #define DROP_DIV_4 DROP_DIV_3 + BARRIER_PICKUP_CHANCE
 
 // probability that a goop tile will grow on a particular update
-#define GOOP_GROW_CHANCE 0.15
-
+#define GOOP_GROW_CHANCE 0.05
 // maximum amount of goop tiles allowed to spawn in a room, which gets increased as the game progresses
 #define MAX_GOOP_INITIAL 5
-
 // inital goop spawns in a room increase by 1/this as a factor of the player's goop_cleared property
-#define GOOP_CLEARING_RATIO 30
+#define GOOP_CLEARING_RATIO 100
+// how many times to grow the goop before the room is fully loaded
+#define GOOP_GEN_ITERATIONS 50
 
 // definitions for character symbols representing different game elements
 #define UP_ATTACK 0xe2afad
@@ -97,6 +98,7 @@ private:
 	key_states ks;
 	uint32_t* room_designs[NUM_ROOM_LAYOUTS + 2] = { NULL };
 	uint32_t* transition_frames[NUM_TRANSITIONS] = { NULL };
+	set<ivector2> cleared_rooms;
 
 	// draw doorways based on room position
 	void draw_doorways(ivector2);
@@ -136,7 +138,7 @@ private:
 	static bool is_barrier_pickup(uint32_t);
 
 	// iterate over all goop tiles and try to grow them into adjacent tiles
-	void grow_goop_tiles();
+	bool grow_goop_tiles();
 	// generate a fresh room of goop for the player to fight. masked based on the room layout chosen
 	void generate_fresh_goop(unsigned int, unsigned int);
 	// iterate to the next graphical version of a goop tile
