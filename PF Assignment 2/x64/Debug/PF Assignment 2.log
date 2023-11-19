@@ -1,4 +1,6 @@
 ﻿  game.cc
-C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(21,38): warning C4244: 'argument': conversion from 'huge_uint' to 'unsigned int', possible loss of data
-C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(608,9): warning C4244: 'return': conversion from 'double' to 'unsigned int', possible loss of data
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(20,38): warning C4244: 'argument': conversion from 'huge_uint' to 'unsigned int', possible loss of data
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(565,36): warning C4018: '<': signed/unsigned mismatch
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(592,92): warning C4018: '<=': signed/unsigned mismatch
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(636,9): warning C4244: 'return': conversion from 'double' to 'unsigned int', possible loss of data
   PF Assignment 2.vcxproj -> C:\Users\maste\source\repos\PF Assignment 2\x64\Debug\PF Assignment 2.exe

@@ -6,6 +6,7 @@
 #include "ivector2.h"
 #include "bomb.h"
 #include "render_data.h"
+#include "message_history.h"
 #include "random_provider.h"
 #include "player_data.h"
 
@@ -94,6 +95,7 @@ private:
 	render_data* rd;
 	player_data* pd;
 	random_provider* rp;
+	message_history* mh;
 	ivector2 room;
 	vector<bomb*> bombs;
 	key_states ks;
@@ -151,26 +153,6 @@ public:
 	// where the mainloop of the game happens
 	void game_main();
 };
-
-// set the text cursor position in the console
-static void set_cursor_pos(ivector2 pos)
-{
-	// based closely on this Gist: https://gist.github.com/karolisjan/643c77b56e555683d57d1fac6906c638
-	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD coord = { (SHORT)pos.x, (SHORT)pos.y };
-	cout.flush();
-	SetConsoleCursorPosition(out, coord);
-}
-
-// hide the text cursor in the console
-static void hide_cursor()
-{
-	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_CURSOR_INFO cursor_info;
-	GetConsoleCursorInfo(out, &cursor_info);
-	cursor_info.bVisible = false;
-	SetConsoleCursorInfo(out, &cursor_info);
-}
 
 // clamp an int between two other ints
 static unsigned int clamp(unsigned int x, unsigned int a, unsigned int b) { return max(min(x, b), a); }

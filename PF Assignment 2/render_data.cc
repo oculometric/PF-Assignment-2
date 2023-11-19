@@ -1,6 +1,6 @@
 #include "render_data.h"
 
-#include "game.h"
+#include "terminal_utils.h"
 
 void render_data::set_draw_offset(ivector2 v)
 {

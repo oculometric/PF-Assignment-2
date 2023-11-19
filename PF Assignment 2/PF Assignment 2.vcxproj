@@ -22,14 +22,17 @@
     <ClInclude Include="bomb.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="ivector2.h" />
+    <ClInclude Include="message_history.h" />
     <ClInclude Include="player_data.h" />
     <ClInclude Include="random_provider.h" />
     <ClInclude Include="render_data.h" />
     <ClInclude Include="room.h" />
+    <ClInclude Include="terminal_utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="game.cc" />
     <ClCompile Include="main.cc" />
+    <ClCompile Include="message_history.cc" />
     <ClCompile Include="render_data.cc" />
     <ClCompile Include="room.cc" />
   </ItemGroup>

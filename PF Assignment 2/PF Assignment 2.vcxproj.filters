@@ -36,6 +36,12 @@
     <ClInclude Include="player_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="message_history.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="terminal_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="game.cc">
@@ -48,6 +54,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="room.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="message_history.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

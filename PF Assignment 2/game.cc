@@ -3,8 +3,7 @@
 #include <iostream>
 #include <thread>
 #include <Windows.h>
-
-#include "render_data.h"
+#include "terminal_utils.h"
 
 using namespace std;
 
@@ -49,6 +48,8 @@ void game::game_main()
 	ivector2 graphics_offset = (terminal_size_characters / 2) - rd_center;
 	rd->set_draw_offset(graphics_offset);
 
+	mh = new message_history(ivector2{ graphics_offset.x + rd_size.x, graphics_offset.y + 1 }, rd_size.y - 5, 32);
+
 	// load buffers of rooms
 	for (int i = 0; i < NUM_ROOM_LAYOUTS; i++)
 	{
@@ -88,6 +89,7 @@ void game::game_main()
 		while (!ks.any) check_key_states();
 
 		counts_as_turn = false;
+		mh->clear_highlight();
 
 		// clear overlay
 		rd->clear_layer(layer::OVERLAY);
@@ -157,11 +159,7 @@ void game::game_main()
 				cleared_rooms.insert(room);
 
 				// draw special message
-				string line = u8"████████████████";
-				string text = u8"█ROOM███CLEARED█";
-				rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y - 1 }, line, false);
-				rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y }, text, false);
-				rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y + 1 }, line, false);
+				mh->append_line("ROOM CLEARED");
 			}
 
 			// update bombs
@@ -176,7 +174,7 @@ void game::game_main()
 		string score_text = " score : " + to_string(calculate_score()) + " (" + to_string(pd->turns) + " turns, " + to_string(cleared_rooms.size()) + " rooms cleared)";
 		cout << score_text;
 		for (int i = 0; i < rd_size.x - score_text.size(); i++) cout << ' ';
-
+		mh->draw(cout);
 
 		if (pd->health == 0) break;
 
@@ -195,9 +193,11 @@ void game::game_main()
 	
 	string text_1 = "GAME OVER : SCORE " + to_string(calculate_score());
 	string text_2 = "YOU ARE DEAD";
+	mh->append_line("GAME OVER");
 	rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)(text_1.size() / 2), rd_center.y - 1 }, text_1, false);
 	rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)(text_2.size() / 2), rd_center.y + 1 }, text_2, false);
 	rd->draw(cout);
+	mh->draw(cout);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -484,19 +484,46 @@ void game::check_intersection()
 	bool clear_tile = false;
 
 	// intersection with bomb pickup
-	if (is_bomb_pickup(tile)) { pd->bombs++; clear_tile = true; }
+	if (is_bomb_pickup(tile)) 
+	{
+		pd->bombs++; 
+		clear_tile = true; 
+		mh->append_line("BOMB COLLECTED");
+	}
 
 	// intersection with health pickup
-	if (is_health_pickup(tile)) { pd->health = clamp(pd->health + 3, 0, pd->max_health); pd->invincibility_timer = 1; clear_tile = true; }
+	if (is_health_pickup(tile)) 
+	{ 
+		pd->health = clamp(pd->health + 3, 0, pd->max_health); 
+		pd->invincibility_timer = 1; 
+		clear_tile = true;
+		mh->append_line("HEALTH REFILLED");
+	}
 
 	// intersection with max health upgrade
-	if (is_health_upgrade(tile)) { pd->max_health++; pd->health++; clear_tile = true; }
+	if (is_health_upgrade(tile)) 
+	{ 
+		pd->max_health++; 
+		pd->health++; 
+		clear_tile = true; 
+		mh->append_line("MAX HEALTH INCREASED");
+	}
 
 	// intersection with range upgrade
-	if (is_range_upgrade(tile)) { pd->range++; clear_tile = true; }
+	if (is_range_upgrade(tile)) 
+	{ 
+		pd->range++; 
+		clear_tile = true; 
+		mh->append_line("SWORD RANGE INCREASED");
+	}
 
 	// intersection with barrier pickup
-	if (is_barrier_pickup(tile)) { pd->has_barrier = true; clear_tile = true; }
+	if (is_barrier_pickup(tile)) 
+	{ 
+		pd->has_barrier = true; 
+		clear_tile = true; 
+		mh->append_line("BARRIER COLLECTED");
+	}
 
 	if (clear_tile) rd->set_tile(layer::FOREGROUND, pd->position, 0);
 }
@@ -535,7 +562,7 @@ bool game::grow_goop_tiles()
 {
 	unsigned int rd_length = rd_size.x * rd_size.y;
 	bool goop_seen = false;
-	for (unsigned int i = 2 + (rd_size.x*2); i < rd_length - (3 + (rd_size.x*2)); i++)
+	for (int i = 2 + (rd_size.x*2); i < rd_length - (3 + (rd_size.x*2)); i++)
 	{
 		uint32_t tile_value = rd->get_tile(layer::FOREGROUND, i);
 		if (!is_goop_tile(tile_value)) continue;
@@ -560,13 +587,13 @@ bool game::grow_goop_tiles()
 				rd->get_tile(layer::FOREGROUND, i + 1)
 			};
 
-			if (!is_goop_tile(fg_udlr[0]) && (bg_udlr[0] == ' ' || bg_udlr[0] == 0))
+			if (!is_goop_tile(fg_udlr[0]) && (bg_udlr[0] == ' ' || bg_udlr[0] == 0) && (i-rd_size.x >= rd_size.x*2))
 				rd->set_tile(layer::FOREGROUND, i - rd_size.x, GOOP_INIT);
-			if (!is_goop_tile(fg_udlr[1]) && (bg_udlr[1] == ' ' || bg_udlr[1] == 0))
+			if (!is_goop_tile(fg_udlr[1]) && (bg_udlr[1] == ' ' || bg_udlr[1] == 0) && (i+rd_size.x <= rd_length-(rd_size.x*3)))
 				rd->set_tile(layer::FOREGROUND, i + rd_size.x, GOOP_INIT);
-			if (!is_goop_tile(fg_udlr[2]) && (bg_udlr[2] == ' ' || bg_udlr[2] == 0) && (i % rd_size.x != 0))
+			if (!is_goop_tile(fg_udlr[2]) && (bg_udlr[2] == ' ' || bg_udlr[2] == 0) && ((i-1) % rd_size.x >= 2))
 				rd->set_tile(layer::FOREGROUND, i - 1, GOOP_INIT);
-			if (!is_goop_tile(fg_udlr[3]) && (bg_udlr[3] == ' ' || bg_udlr[3] == 0) && (i % (rd_size.x-1) != 0))
+			if (!is_goop_tile(fg_udlr[3]) && (bg_udlr[3] == ' ' || bg_udlr[3] == 0) && ((i+1) % rd_size.x <= rd_size.x-3))
 				rd->set_tile(layer::FOREGROUND, i + 1, GOOP_INIT);
 		}
 	}
