@@ -38,9 +38,16 @@ void game::game_main()
 	rd->draw(cout);
 
 	// center the room on the screen, in fullscreen terminal
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	ivector2 terminal_size_characters = 
+	{
+		csbi.srWindow.Right - csbi.srWindow.Left + 1, 
+		csbi.srWindow.Bottom - csbi.srWindow.Top + 1 
+	};
 
-	// TODO: fullscreen and center
-	rd->set_draw_offset(ivector2{ 5,4 });
+	ivector2 graphics_offset = (terminal_size_characters / 2) - rd_center;
+	rd->set_draw_offset(graphics_offset);
 
 	// load buffers of rooms
 	for (int i = 0; i < NUM_ROOM_LAYOUTS; i++)
@@ -72,14 +79,15 @@ void game::game_main()
 
 	ks.any = false;
 
+	bool counts_as_turn = false;
+
 	// main gameloop begins here:
 	while (true)
 	{
 		// get user input
 		while (!ks.any) check_key_states();
 
-		// increment player turns
-		pd->turns++;
+		counts_as_turn = false;
 
 		// clear overlay
 		rd->clear_layer(layer::OVERLAY);
@@ -101,6 +109,7 @@ void game::game_main()
 				pd->position = raw_next_position;
 				uint32_t bg = rd->get_tile(layer::BACKGROUND, pd->position);
 				if (bg != 0 && bg != ' ' && bg != BARRIER) pd->position = old_position;
+				else counts_as_turn = true;
 
 				// handle door transitions
 				room = handle_door_transition();
@@ -110,51 +119,64 @@ void game::game_main()
 		else if (ks.attack)
 		{
 			perform_player_attack();
+			counts_as_turn = true;
 		}
 		else if (ks.alt_attack)
 		{
 			perform_player_bomb();
+			counts_as_turn = true;
 		}
 		else if (ks.barrier_attack)
 		{
 			perform_player_barrier();
+			counts_as_turn = true;
 		}
 		
 		// draw player
 		rd->set_tile(layer::OVERLAY, pd->position, PLAYER);
 
-		// check for intersections
-		check_intersection();
-
-		// decrease invincibility timer
-		if (pd->invincibility_timer > 0) pd->invincibility_timer--;
-
-		// update the goop
-		bool room_cleared = grow_goop_tiles();
-		if (room_cleared && cleared_rooms.find(room) == cleared_rooms.end())
+		// increment player turns, only if this was actually a turn
+		if (counts_as_turn)
 		{
-			// room cleared, reward player and make a note
-			pd->health = pd->max_health;
-			pd->bombs += PLAYER_INITIAL_BOMBS;
-			
-			cleared_rooms.insert(room);
+			pd->turns++;
 
-			// draw special message
-			string line = u8"████████████████";
-			string text = u8"█ROOM███CLEARED█";
-			rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y - 1 }, line, false);
-			rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y }, text, false);
-			rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y + 1 }, line, false);
+			// check for intersections
+			check_intersection();
+
+			// decrease invincibility timer
+			if (pd->invincibility_timer > 0) pd->invincibility_timer--;
+
+			// update the goop
+			bool room_cleared = grow_goop_tiles();
+			if (room_cleared && cleared_rooms.find(room) == cleared_rooms.end())
+			{
+				// room cleared, reward player and make a note
+				pd->health = pd->max_health;
+				pd->bombs += PLAYER_INITIAL_BOMBS;
+
+				cleared_rooms.insert(room);
+
+				// draw special message
+				string line = u8"████████████████";
+				string text = u8"█ROOM███CLEARED█";
+				rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y - 1 }, line, false);
+				rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y }, text, false);
+				rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)8, rd_center.y + 1 }, line, false);
+			}
+
+			// update bombs
+			update_bombs();
 		}
-
-		// update bombs
-		update_bombs();
 
 		// update overlay text
 		update_overlay_text();
 
 		// reset cursor and draw screen
 		rd->draw(cout);
+		string score_text = " score : " + to_string(calculate_score()) + " (" + to_string(pd->turns) + " turns, " + to_string(cleared_rooms.size()) + " rooms cleared)";
+		cout << score_text;
+		for (int i = 0; i < rd_size.x - score_text.size(); i++) cout << ' ';
+
 
 		if (pd->health == 0) break;
 
@@ -229,7 +251,7 @@ void game::draw_doorways(ivector2 room_position)
 void game::update_overlay_text()
 {
 	// top left: current room
-	string top_left = " rm : " + to_string(room.x) + " " + to_string(room.y) + " | sco : " + to_string(calculate_score()) + " (" + to_string(pd->turns) + " trn)";
+	string top_left = " room : " + to_string(room.x) + " " + to_string(room.y);
 	rd->set_tiles(layer::OVERLAY, 0, top_left, false);
 
 	// top right: health
@@ -321,6 +343,7 @@ void game::perform_player_attack()
 	ivector2 pos = pd->position;
 	for (unsigned int i = 0; i < pd->range + 1; i++)
 	{
+		if (pos.x <= 0 || pos.x >= rd_size.x - 1 || pos.y <= 0 || pos.y >= rd_size.y - 1) break;
 		rd->set_tile(layer::OVERLAY, pos, c);
 		if (is_goop_tile(rd->get_tile(layer::FOREGROUND, pos)))
 		{
@@ -583,9 +606,9 @@ uint32_t game::advance_goop_tile(uint32_t current)
 
 unsigned int game::calculate_score()
 {
-	return (pd->goop_cleared * GOOP_SCORE_MULTIPLIER) 
+	return max(0, (pd->goop_cleared * GOOP_SCORE_MULTIPLIER) 
 		 + (pd->turns * TURNS_SCORE_MULTIPLIER)
 		 + ((pd->max_health - PLAYER_INITIAL_HEALTH) * HEALTH_SCORE_MULTIPLIER)
 		 + ((pd->range - PLAYER_INITIAL_RANGE) * RANGE_SCORE_MULTIPLER)
-		 + 100;
+		 + (cleared_rooms.size() * ROOMS_SCORE_MULTIPLIER));
 }

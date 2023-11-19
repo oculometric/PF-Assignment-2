@@ -33,10 +33,10 @@ struct key_states
 #define TRANSITION_DELAY 150
 
 // probability definitions for different types of item dropped by goop when it dies
-#define HEALTH_PICKUP_CHANCE 0.05
-#define BOMB_PICKUP_CHANCE 0.1
-#define HEALTH_UPGRADE_CHANCE 0.02
-#define RANGE_UPGRADE_CHANCE 0.01
+#define HEALTH_PICKUP_CHANCE 0.02
+#define BOMB_PICKUP_CHANCE 0.04
+#define HEALTH_UPGRADE_CHANCE 0.004
+#define RANGE_UPGRADE_CHANCE 0.002
 #define BARRIER_PICKUP_CHANCE 0.02
 
 #define DROP_DIV_0 HEALTH_PICKUP_CHANCE
@@ -84,6 +84,7 @@ struct key_states
 #define TURNS_SCORE_MULTIPLIER -0.5
 #define HEALTH_SCORE_MULTIPLIER 100
 #define RANGE_SCORE_MULTIPLER 250
+#define ROOMS_SCORE_MULTIPLIER 2000
 
 // class encapsulating all of the actual gameplay code
 class game
