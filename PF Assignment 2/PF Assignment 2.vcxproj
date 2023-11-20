@@ -24,6 +24,7 @@
     <ClInclude Include="ivector2.h" />
     <ClInclude Include="message_history.h" />
     <ClInclude Include="player_data.h" />
+    <ClInclude Include="profiling.h" />
     <ClInclude Include="random_provider.h" />
     <ClInclude Include="render_data.h" />
     <ClInclude Include="room.h" />

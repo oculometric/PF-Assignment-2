@@ -9,11 +9,18 @@
 #include <Xinput.h>
 
 #include "terminal_utils.h"
+#include "profiling.h"
 
 using namespace std;
 
 void game::game_main()
 {
+	// REMOVEME: for profiling only
+	profiling_timing_data ptd{};
+
+	auto timing_a = get_now();
+	auto timing_b = get_now();
+
 	system("chcp 65001");
 	hide_cursor();
 
@@ -69,6 +76,10 @@ void game::game_main()
 		}
 	}
 
+	timing_b = get_now();
+	ptd.setup_time += timing_b - timing_a;
+	timing_a = get_now();
+
 	// load buffers of rooms
 	for (int i = 0; i < NUM_ROOM_LAYOUTS; i++)
 	{
@@ -88,12 +99,19 @@ void game::game_main()
 	room_designs[NUM_ROOM_LAYOUTS] = new uint32_t[rd_size.x * rd_size.y];
 	read_multichars_to_buffer((char*)room_tutorial, room_designs[NUM_ROOM_LAYOUTS], false);
 
+	timing_b = get_now();
+	ptd.buffer_load_time += timing_b - timing_a;
+	timing_a = get_now();
+
 	// copy the tutorial room into the background buffer
 	rd->read_buffer(layer::BACKGROUND, room_designs[NUM_ROOM_LAYOUTS]);
 	draw_doorways(room);
 	rd->set_tile(layer::FOREGROUND, ivector2{ 11,8 }, GOOP_INIT);
 
 	rd->set_tile(layer::OVERLAY, pd->position, PLAYER);
+
+	timing_b = get_now();
+	ptd.setup_time += timing_b - timing_a;
 
 	rd->draw(cout);
 
@@ -107,11 +125,21 @@ void game::game_main()
 		// get user input
 		while (!ks.any) check_key_states();
 
+		timing_a = get_now();
+
 		counts_as_turn = false;
 		mh->clear_highlight();
 
+		timing_b = get_now();
+		ptd.misc_time += timing_b - timing_a;
+		timing_a = get_now();
+
 		// clear overlay
 		rd->clear_layer(layer::OVERLAY);
+
+		timing_b = get_now();
+		ptd.update_overlay_time += timing_b - timing_a;
+		timing_a = get_now();
 
 		// check for player movement
 		ivector2 move_vector;
@@ -152,20 +180,35 @@ void game::game_main()
 			perform_player_barrier();
 			counts_as_turn = true;
 		}
+
+		timing_b = get_now();
+		ptd.player_actions_time += timing_b - timing_a;
+		timing_a = get_now();
 		
 		// draw player
 		rd->set_tile(layer::OVERLAY, pd->position, PLAYER);
+
+
+		timing_b = get_now();
+		ptd.misc_time += timing_b - timing_a;
 
 		// increment player turns, only if this was actually a turn
 		if (counts_as_turn)
 		{
 			pd->turns++;
 
+			timing_a = get_now();
+
 			// check for intersections
 			check_intersection();
 
+			timing_b = get_now();
+			ptd.intersection_check_time += timing_b - timing_a;
+
 			// decrease invincibility timer
 			if (pd->invincibility_timer > 0) pd->invincibility_timer--;
+
+			timing_a = get_now();
 
 			// update the goop
 			bool room_cleared = grow_goop_tiles();
@@ -181,12 +224,25 @@ void game::game_main()
 				mh->append_line("ROOM CLEARED");
 			}
 
+			timing_b = get_now();
+			ptd.growth_time += timing_b - timing_a;
+			timing_a = get_now();
+
 			// update bombs
 			update_bombs();
+
+			timing_b = get_now();
+			ptd.misc_time += timing_b - timing_a;
 		}
+
+		timing_a = get_now();
 
 		// update overlay text
 		update_overlay_text();
+
+		timing_b = get_now();
+		ptd.update_overlay_time += timing_b - timing_a;
+		timing_a = get_now();
 
 		// reset cursor and draw screen
 		rd->draw(cout);
@@ -195,20 +251,33 @@ void game::game_main()
 		for (int i = 0; i < rd_size.x - score_text.size(); i++) cout << ' ';
 		mh->draw(cout);
 
+		timing_b = get_now();
+		ptd.draw_time += timing_b - timing_a;
+
 		if (pd->health == 0) break;
 
 		// wait for there to be no keys pressed
 		while (ks.any) check_key_states();
 	}
 
+	timing_a = get_now();
+
 	// show the game over screen
 	room_designs[NUM_ROOM_LAYOUTS+1] = new uint32_t[rd_size.x * rd_size.y];
 	read_multichars_to_buffer((char*)room_gameover, room_designs[NUM_ROOM_LAYOUTS+1], false);
+
+	timing_b = get_now();
+	ptd.buffer_load_time += timing_b - timing_a;
+	timing_a = get_now();
 
 	// copy the tutorial room into the background buffer
 	rd->read_buffer(layer::BACKGROUND, room_designs[NUM_ROOM_LAYOUTS+1]);
 	rd->clear_layer(layer::FOREGROUND);
 	rd->clear_layer(layer::OVERLAY);
+
+	timing_b = get_now();
+	ptd.setup_time += timing_b - timing_a;
+	timing_a = get_now();
 	
 	string text_1 = "GAME OVER : SCORE " + to_string(calculate_score());
 	string text_2 = "YOU ARE DEAD";
@@ -218,15 +287,29 @@ void game::game_main()
 	rd->draw(cout);
 	mh->draw(cout);
 
+	timing_b = get_now();
+	ptd.draw_time += timing_b - timing_a;
+
 	for (int i = 0; i < 2; i++)
 	{
+		timing_a = get_now();
+
 		for (int t = 0; t < rd->get_size().x * rd->get_size().y; t++)
 		{
 			uint32_t tile = rd->get_tile(layer::BACKGROUND, t);
 			if (tile != BLOCK) rd->set_tile(layer::BACKGROUND, t, tile+1);
 		}
+		timing_b = get_now();
+		ptd.draw_time += timing_b - timing_a;
+
 		this_thread::sleep_for(chrono::seconds(1));
+
+		timing_a = get_now();
+
 		rd->draw(cout);
+
+		timing_b = get_now();
+		ptd.draw_time += timing_b - timing_a;
 	}
 
 	while (true);

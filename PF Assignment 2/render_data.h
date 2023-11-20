@@ -31,6 +31,10 @@ private:
 	unsigned int canvas_length;
 	// terminal offset for drawing the room to the screen
 	ivector2 draw_offset;
+	// line of spaces to offset by in the terminal, saves rebuilding repeatedly
+	string line_offset;
+	// buffer for the whole screen, saving reallocation
+	string whole_screen;
 
 public:
 	// set drawing offset

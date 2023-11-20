@@ -5,6 +5,9 @@
 void render_data::set_draw_offset(ivector2 v)
 {
 	draw_offset = v;
+	line_offset = "";
+	for (int i = 0; i < draw_offset.x; i++) line_offset += ' ';
+	whole_screen.reserve((canvas_size.x + draw_offset.x) * canvas_size.y * 4);
 }
 
 ivector2 render_data::get_size()
@@ -151,21 +154,22 @@ void render_data::clear_layer(layer l)
 void render_data::draw(ostream& s)
 {
 	set_cursor_pos(draw_offset);
-	string line_offset = "";
-	for (int i = 0; i < draw_offset.x; i++) line_offset += ' ';
+	uint32_t* buffer;
+	uint32_t chr;
+	whole_screen.clear();
 	for (unsigned int i = 0; i < canvas_length; i++)
 	{
-		uint32_t* buffer = overlay_layer;
+		buffer = overlay_layer;
 		if (overlay_layer[i] == ' ' || overlay_layer[i] == 0)
 		{
 			buffer = foreground_layer;
 			if (foreground_layer[i] == ' ' || foreground_layer[i] == 0) buffer = background_layer;
 		}
 
-		uint32_t chr = buffer[i];
+		chr = buffer[i];
 		if (chr == ' ' || chr == 0)
 		{
-			s << ' ';
+			whole_screen += ' ';
 		}
 		else
 		{
@@ -174,14 +178,19 @@ void render_data::draw(ostream& s)
 			unsigned char c2 = (chr >> 16) & 0b11111111;
 			unsigned char c3 = (chr >> 24) & 0b11111111;
 
-			if (c3 != 0) s << c3;
-			if (c2 != 0) s << c2;
-			if (c1 != 0) s << c1;
-			if (c0 != 0) s << c0;
-			else s << ' ';
+			if (c3 != 0) whole_screen += c3;
+			if (c2 != 0) whole_screen += c2;
+			if (c1 != 0) whole_screen += c1;
+			if (c0 != 0) whole_screen += c0;
+			else whole_screen += ' ';
 		}
-		if (i % canvas_size.x == canvas_size.x - 1) s << endl << line_offset;
+		if (i % canvas_size.x == canvas_size.x - 1)
+		{
+			whole_screen += '\n';
+			whole_screen += line_offset;
+		}
 	}
+	cout << whole_screen;
 }
 
 render_data::render_data(ivector2 v)
@@ -193,6 +202,8 @@ render_data::render_data(ivector2 v)
 	background_layer = new uint32_t[canvas_length];
 	foreground_layer = new uint32_t[canvas_length];
 	overlay_layer = new uint32_t[canvas_length];
+
+	whole_screen.reserve(canvas_length*4);
 }
 
 render_data::~render_data()

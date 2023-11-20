@@ -1,0 +1,26 @@
+setup -       49331000
+buffers -        85900
+draw -    202057459800
+actions -  15786336100
+intersection - 4315800
+growth -      35905300
+misc -        29470800
+overlay -     86927700
+
+cleared rooms - 4
+turns - 1598
+draw/turn - 126443967 (126 ms)
+
+
+setup -       54219300
+buffers -       130000
+draw -     37662647800
+actions -  31031608300
+intersection - 3533400
+growth -      17648600
+misc -        23931000
+overlay -     72377500
+
+cleared rooms - 10
+turns - 1908
+draw/turn - 19739333 (19ms)
