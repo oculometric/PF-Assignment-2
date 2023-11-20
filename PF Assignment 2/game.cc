@@ -3,6 +3,11 @@
 #include <iostream>
 #include <thread>
 #include <Windows.h>
+
+#pragma comment(lib,"XInput.lib")
+#pragma comment(lib,"Xinput9_1_0.lib")
+#include <Xinput.h>
+
 #include "terminal_utils.h"
 
 using namespace std;
@@ -17,7 +22,7 @@ void game::game_main()
 	rd				= new render_data(rd_size);
 	pd				= new player_data();
 	room			= { 0,1 };
-	rp				= new random_provider(get_seed(room));
+	rp				= new random_provider((unsigned int)get_seed(room));
 	ivector2 rd_center = rd_size / 2;
 
 	// set up player
@@ -37,6 +42,8 @@ void game::game_main()
 	rd->draw(cout);
 
 	// center the room on the screen, in fullscreen terminal
+	ShowWindow(GetConsoleWindow(), SW_MAXIMIZE); // FIXME: this does nothing, why
+
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
 	ivector2 terminal_size_characters = 
@@ -49,6 +56,18 @@ void game::game_main()
 	rd->set_draw_offset(graphics_offset);
 
 	mh = new message_history(ivector2{ graphics_offset.x + rd_size.x, graphics_offset.y + 1 }, rd_size.y - 5, 32);
+
+	// set up controller
+	user_controller_index = -1;
+	XINPUT_STATE dump;
+	for (int i = 0; i < 4; i++)
+	{
+		if (XInputGetState(i, &dump) == ERROR_SUCCESS)
+		{
+			user_controller_index = i;
+			break;
+		}
+	}
 
 	// load buffers of rooms
 	for (int i = 0; i < NUM_ROOM_LAYOUTS; i++)
@@ -278,6 +297,20 @@ void game::check_key_states()
 	ks.attack = GetAsyncKeyState('X') & 0x01;
 	ks.alt_attack = GetAsyncKeyState('Z') & 0x01;
 	ks.barrier_attack = GetAsyncKeyState('C') & 0x01;
+
+	XINPUT_STATE controller_state;
+	DWORD result = XInputGetState(user_controller_index, &controller_state);
+	if (result == ERROR_SUCCESS)
+	{
+		ks.move_up			|= (bool)(controller_state.Gamepad.wButtons & 0b0001);
+		ks.move_down		|= (bool)(controller_state.Gamepad.wButtons & 0b0010);
+		ks.move_left		|= (bool)(controller_state.Gamepad.wButtons & 0b0100);
+		ks.move_right		|= (bool)(controller_state.Gamepad.wButtons & 0b1000);
+
+		ks.attack			|= (bool)(controller_state.Gamepad.wButtons & 0b001000000000000);
+		ks.alt_attack		|= (bool)(controller_state.Gamepad.wButtons & 0b010000000000000);
+		ks.barrier_attack	|= (bool)(controller_state.Gamepad.wButtons & 0b100000000000000);
+	}
 
 	ks.any = ks.move_up || ks.move_down || ks.move_left || ks.move_right || ks.attack || ks.alt_attack || ks.barrier_attack;
 }
@@ -560,7 +593,7 @@ bool game::is_barrier_pickup(uint32_t tile)
 
 bool game::grow_goop_tiles()
 {
-	unsigned int rd_length = rd_size.x * rd_size.y;
+	int rd_length = rd_size.x * rd_size.y;
 	bool goop_seen = false;
 	for (int i = 2 + (rd_size.x*2); i < rd_length - (3 + (rd_size.x*2)); i++)
 	{
@@ -633,7 +666,7 @@ uint32_t game::advance_goop_tile(uint32_t current)
 
 unsigned int game::calculate_score()
 {
-	return max(0, (pd->goop_cleared * GOOP_SCORE_MULTIPLIER) 
+	return (unsigned int)max(0, (pd->goop_cleared * GOOP_SCORE_MULTIPLIER) 
 		 + (pd->turns * TURNS_SCORE_MULTIPLIER)
 		 + ((pd->max_health - PLAYER_INITIAL_HEALTH) * HEALTH_SCORE_MULTIPLIER)
 		 + ((pd->range - PLAYER_INITIAL_RANGE) * RANGE_SCORE_MULTIPLER)

@@ -103,6 +103,8 @@ private:
 	uint32_t* transition_frames[NUM_TRANSITIONS] = { NULL };
 	set<ivector2> cleared_rooms;
 
+	DWORD user_controller_index;
+
 	// draw doorways based on room position
 	void draw_doorways(ivector2);
 	// update HUD text about the player's health etc
