@@ -1,2 +1,11 @@
 ﻿  game.cc
+  message_history.cc
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\message_history.cc(17,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\message_history.cc(38,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\message_history.cc(42,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\message_history.cc(54,9): warning C4018: '<': signed/unsigned mismatch
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\message_history.cc(57,33): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\message_history.cc(63,31): warning C4018: '<': signed/unsigned mismatch
+  render_data.cc
+  Generating Code...
   PF Assignment 2.vcxproj -> C:\Users\maste\source\repos\PF Assignment 2\x64\Debug\PF Assignment 2.exe

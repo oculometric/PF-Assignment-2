@@ -20,6 +20,8 @@ static void hide_cursor()
 	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_CURSOR_INFO cursor_info;
 	GetConsoleCursorInfo(out, &cursor_info);
+	cursor_info.dwSize = 1;
 	cursor_info.bVisible = false;
+	cout.flush();
 	SetConsoleCursorInfo(out, &cursor_info);
 }

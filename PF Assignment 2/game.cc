@@ -25,7 +25,7 @@ bool game::game_main(bool show_tutorial)
 	rd_size			= ivector2{ 45, 21 };
 	rd				= new render_data(rd_size);
 	pd				= new player_data();
-	room			= { 0, 0 };
+	room			= ivector2{ 0, 0 }; cleared_rooms.insert(ivector2{ 0, 0 });
 	rp				= new random_provider(global_seed);
 	ivector2 rd_center = rd_size / 2;
 
@@ -543,8 +543,14 @@ ivector2 game::handle_door_transition()
 	// get the room layout id for the new room
 	unsigned int room_layout_id = (global_seed + get_seed(new_room)) % NUM_ROOM_LAYOUTS;
 
+	// check if this room is the starting room
+	bool is_start = new_room.x == 0 && new_room.y == 0;
+
 	// load room layout based on seed, and draw the doorways
-	rd->read_buffer(layer::BACKGROUND, room_designs[room_layout_id]);
+	if (is_start)
+		rd->read_buffer(layer::BACKGROUND, room_designs[NUM_ROOM_LAYOUTS]);
+	else
+		rd->read_buffer(layer::BACKGROUND, room_designs[room_layout_id]);
 	draw_doorways(new_room);
 
 	// populate the room with goop, if the room was not already cleared
