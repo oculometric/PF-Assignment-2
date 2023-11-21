@@ -15,21 +15,17 @@ using namespace std;
 
 void game::game_main()
 {
-	// REMOVEME: for profiling only
-	profiling_timing_data ptd{};
-
-	auto timing_a = get_now();
-	auto timing_b = get_now();
-
+	// set up the terminal
 	system("chcp 65001");
 	hide_cursor();
 
 	// initial configuration
+	global_seed		= (unsigned int)chrono::high_resolution_clock::now().time_since_epoch().count();
 	rd_size			= ivector2{ 45, 21 };
 	rd				= new render_data(rd_size);
 	pd				= new player_data();
-	room			= { 0,1 };
-	rp				= new random_provider((unsigned int)get_seed(room));
+	room			= { 0, 0 };
+	rp				= new random_provider(global_seed);
 	ivector2 rd_center = rd_size / 2;
 
 	// set up player
@@ -43,14 +39,13 @@ void game::game_main()
 	pd->turns = 0;
 	pd->goop_cleared = 0;
 
+	// clear screen
 	rd->clear_layer(layer::BACKGROUND);
 	rd->clear_layer(layer::FOREGROUND);
 	rd->clear_layer(layer::OVERLAY);
 	rd->draw(cout);
 
-	// center the room on the screen, in fullscreen terminal
-	ShowWindow(GetConsoleWindow(), SW_MAXIMIZE); // FIXME: this does nothing, why
-
+	// center the room on the terminal
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
 	ivector2 terminal_size_characters = 
@@ -76,10 +71,6 @@ void game::game_main()
 		}
 	}
 
-	timing_b = get_now();
-	ptd.setup_time += timing_b - timing_a;
-	timing_a = get_now();
-
 	// load buffers of rooms
 	for (int i = 0; i < NUM_ROOM_LAYOUTS; i++)
 	{
@@ -99,20 +90,11 @@ void game::game_main()
 	room_designs[NUM_ROOM_LAYOUTS] = new uint32_t[rd_size.x * rd_size.y];
 	read_multichars_to_buffer((char*)room_tutorial, room_designs[NUM_ROOM_LAYOUTS], false);
 
-	timing_b = get_now();
-	ptd.buffer_load_time += timing_b - timing_a;
-	timing_a = get_now();
-
 	// copy the tutorial room into the background buffer
 	rd->read_buffer(layer::BACKGROUND, room_designs[NUM_ROOM_LAYOUTS]);
 	draw_doorways(room);
 	rd->set_tile(layer::FOREGROUND, ivector2{ 11,8 }, GOOP_INIT);
-
 	rd->set_tile(layer::OVERLAY, pd->position, PLAYER);
-
-	timing_b = get_now();
-	ptd.setup_time += timing_b - timing_a;
-
 	rd->draw(cout);
 
 	ks.any = false;
@@ -125,21 +107,11 @@ void game::game_main()
 		// get user input
 		while (!ks.any) check_key_states();
 
-		timing_a = get_now();
-
 		counts_as_turn = false;
 		mh->clear_highlight();
 
-		timing_b = get_now();
-		ptd.misc_time += timing_b - timing_a;
-		timing_a = get_now();
-
 		// clear overlay
 		rd->clear_layer(layer::OVERLAY);
-
-		timing_b = get_now();
-		ptd.update_overlay_time += timing_b - timing_a;
-		timing_a = get_now();
 
 		// check for player movement
 		ivector2 move_vector;
@@ -167,48 +139,36 @@ void game::game_main()
 		}
 		else if (ks.attack)
 		{
+			// handle player attacking
 			perform_player_attack();
 			counts_as_turn = true;
 		}
 		else if (ks.alt_attack)
 		{
+			// handle player placing a bomb
 			perform_player_bomb();
 			counts_as_turn = true;
 		}
 		else if (ks.barrier_attack)
 		{
+			// handle player placing a barrier
 			perform_player_barrier();
 			counts_as_turn = true;
 		}
 
-		timing_b = get_now();
-		ptd.player_actions_time += timing_b - timing_a;
-		timing_a = get_now();
-		
 		// draw player
 		rd->set_tile(layer::OVERLAY, pd->position, PLAYER);
-
-
-		timing_b = get_now();
-		ptd.misc_time += timing_b - timing_a;
 
 		// increment player turns, only if this was actually a turn
 		if (counts_as_turn)
 		{
 			pd->turns++;
 
-			timing_a = get_now();
-
 			// check for intersections
 			check_intersection();
 
-			timing_b = get_now();
-			ptd.intersection_check_time += timing_b - timing_a;
-
 			// decrease invincibility timer
 			if (pd->invincibility_timer > 0) pd->invincibility_timer--;
-
-			timing_a = get_now();
 
 			// update the goop
 			bool room_cleared = grow_goop_tiles();
@@ -224,25 +184,13 @@ void game::game_main()
 				mh->append_line("ROOM CLEARED");
 			}
 
-			timing_b = get_now();
-			ptd.growth_time += timing_b - timing_a;
-			timing_a = get_now();
-
 			// update bombs
 			update_bombs();
-
-			timing_b = get_now();
-			ptd.misc_time += timing_b - timing_a;
 		}
 
-		timing_a = get_now();
 
 		// update overlay text
 		update_overlay_text();
-
-		timing_b = get_now();
-		ptd.update_overlay_time += timing_b - timing_a;
-		timing_a = get_now();
 
 		// reset cursor and draw screen
 		rd->draw(cout);
@@ -251,33 +199,21 @@ void game::game_main()
 		for (int i = 0; i < rd_size.x - score_text.size(); i++) cout << ' ';
 		mh->draw(cout);
 
-		timing_b = get_now();
-		ptd.draw_time += timing_b - timing_a;
-
+		// break out if the player is dead
 		if (pd->health == 0) break;
 
 		// wait for there to be no keys pressed
 		while (ks.any) check_key_states();
 	}
 
-	timing_a = get_now();
-
 	// show the game over screen
 	room_designs[NUM_ROOM_LAYOUTS+1] = new uint32_t[rd_size.x * rd_size.y];
 	read_multichars_to_buffer((char*)room_gameover, room_designs[NUM_ROOM_LAYOUTS+1], false);
-
-	timing_b = get_now();
-	ptd.buffer_load_time += timing_b - timing_a;
-	timing_a = get_now();
 
 	// copy the tutorial room into the background buffer
 	rd->read_buffer(layer::BACKGROUND, room_designs[NUM_ROOM_LAYOUTS+1]);
 	rd->clear_layer(layer::FOREGROUND);
 	rd->clear_layer(layer::OVERLAY);
-
-	timing_b = get_now();
-	ptd.setup_time += timing_b - timing_a;
-	timing_a = get_now();
 	
 	string text_1 = "GAME OVER : SCORE " + to_string(calculate_score());
 	string text_2 = "YOU ARE DEAD";
@@ -287,37 +223,29 @@ void game::game_main()
 	rd->draw(cout);
 	mh->draw(cout);
 
-	timing_b = get_now();
-	ptd.draw_time += timing_b - timing_a;
-
+	// gradually fade the gameover screen to be lighter, just as an effect
 	for (int i = 0; i < 2; i++)
 	{
-		timing_a = get_now();
-
+		// make all the shaded blocks one shade stronger
 		for (int t = 0; t < rd->get_size().x * rd->get_size().y; t++)
 		{
 			uint32_t tile = rd->get_tile(layer::BACKGROUND, t);
 			if (tile != BLOCK) rd->set_tile(layer::BACKGROUND, t, tile+1);
 		}
-		timing_b = get_now();
-		ptd.draw_time += timing_b - timing_a;
 
 		this_thread::sleep_for(chrono::seconds(1));
 
-		timing_a = get_now();
-
 		rd->draw(cout);
-
-		timing_b = get_now();
-		ptd.draw_time += timing_b - timing_a;
 	}
 
+	// halt the program, so the user can see their score
 	while (true);
 }
 
 void game::draw_doorways(ivector2 room_position)
 {
-	unsigned char doors = get_room_doors(room_position);
+	// get packed bools for whether or not to show particular doors
+	unsigned char doors = get_room_doors(room_position, global_seed);
 	ivector2 half = rd_size / 2;
 
 	if (doors & 0b0001)
@@ -352,11 +280,11 @@ void game::draw_doorways(ivector2 room_position)
 
 void game::update_overlay_text()
 {
-	// top left: current room
+	// top left text: current room
 	string top_left = " room : " + to_string(room.x) + " " + to_string(room.y);
 	rd->set_tiles(layer::OVERLAY, 0, top_left, false);
 
-	// top right: health
+	// top right text: health
 	unsigned int tile_pos = rd_size.x - 2;
 	for (unsigned int i = 0; i < pd->max_health; i++)
 	{
@@ -364,7 +292,7 @@ void game::update_overlay_text()
 		tile_pos--;
 	}
 
-	// bottom 
+	// bottom text: various stats
 	string bottom = " d :   | b : " + to_string(pd->bombs) + " | r : " + to_string(pd->range) + " | i : " + to_string(pd->invincibility_timer) + " | q : " + to_string(pd->has_barrier ? 1 : 0);
 	rd->set_tiles(layer::OVERLAY, rd_size.x * (rd_size.y - 1), bottom, false);
 	rd->set_tile(layer::OVERLAY, (rd_size.x * (rd_size.y - 1)) + 5, direction_char(pd->direction));
@@ -372,6 +300,7 @@ void game::update_overlay_text()
 
 void game::check_key_states()
 {
+	// check states of keyboard keys, resetting values in the struct
 	ks.move_up = GetAsyncKeyState(VK_UP) & 0x01;
 	ks.move_down = GetAsyncKeyState(VK_DOWN) & 0x01;
 	ks.move_left = GetAsyncKeyState(VK_LEFT) & 0x01;
@@ -381,6 +310,7 @@ void game::check_key_states()
 	ks.alt_attack = GetAsyncKeyState('Z') & 0x01;
 	ks.barrier_attack = GetAsyncKeyState('C') & 0x01;
 
+	// query controller state and OR those values onto the struct states
 	XINPUT_STATE controller_state;
 	DWORD result = XInputGetState(user_controller_index, &controller_state);
 	if (result == ERROR_SUCCESS)
@@ -395,47 +325,56 @@ void game::check_key_states()
 		ks.barrier_attack	|= (bool)(controller_state.Gamepad.wButtons & 0b100000000000000);
 	}
 
+	// set the flag for any key down if any of the scanned keys are pressed
 	ks.any = ks.move_up || ks.move_down || ks.move_left || ks.move_right || ks.attack || ks.alt_attack || ks.barrier_attack;
 }
 
 ivector2 game::handle_door_transition()
 {
+	// check if the player has crossed out of the current room
 	ivector2 transition_direction{ 0, 0 };
 	if (pd->position.y <= 1) transition_direction.y = -1;
 	if (pd->position.x <= 1) transition_direction.x = -1;
 	if (pd->position.y >= rd_size.y - 2) transition_direction.y = 1;
 	if (pd->position.x >= rd_size.x - 2) transition_direction.x = 1;
 
+	// if the player is not going through a doorway, do nothing
 	if (transition_direction.x == 0 && transition_direction.y == 0) return room;
 
+	// otherwise calculate the base offset of the new room we are going
+	// to transition into
 	ivector2 new_room = room + transition_direction;
 
-	// clear
+	// clear bombs list, since the room will be unloaded and destroyed
 	bombs.clear();
 
-	// clear foreground
+	// clear foreground layer
 	rd->clear_layer(layer::FOREGROUND);
 
-	// transition
+	// play transition frames one by one
+	// these are drawn in the overlay buffer which means they cover
+	// everything else (including the player and text, since we 
+	// do not update those during this)
 	for (int i = 0; i < NUM_TRANSITIONS; i++)
 	{
 		rd->read_buffer(layer::OVERLAY, transition_frames[i]);
+		// small delay between each frame to be fancy
 		this_thread::sleep_for(chrono::milliseconds(TRANSITION_DELAY));
 		rd->draw(cout);
 	}
 
-	// get the room layout id
-	unsigned int room_layout_id = get_seed(new_room) % NUM_ROOM_LAYOUTS;
+	// get the room layout id for the new room
+	unsigned int room_layout_id = (global_seed + get_seed(new_room)) % NUM_ROOM_LAYOUTS;
 
-	// load room based on seed
+	// load room layout based on seed, and draw the doorways
 	rd->read_buffer(layer::BACKGROUND, room_designs[room_layout_id]);
 	draw_doorways(new_room);
 
-	// populate the room with goop, if not cleared
+	// populate the room with goop, if the room was not already cleared
 	if (cleared_rooms.find(new_room) == cleared_rooms.end())
 		generate_fresh_goop(room_layout_id, MAX_GOOP_INITIAL+(pd->goop_cleared/GOOP_CLEARING_RATIO));
 
-	// transition out again
+	// transition out again to show the new room
 	for (int i = NUM_TRANSITIONS-1; i >= 0; i--)
 	{
 		rd->read_buffer(layer::OVERLAY, transition_frames[i]);
@@ -443,10 +382,14 @@ ivector2 game::handle_door_transition()
 		rd->draw(cout);
 	}
 
+	// clear the overlay again to be ready for the rest of
+	// the game to draw itself back out in game_main
 	rd->clear_layer(layer::OVERLAY);
 	this_thread::sleep_for(chrono::milliseconds(TRANSITION_DELAY));
 	rd->draw(cout);
 
+	// set the player's position for entering the 
+	// room (i.e. move them to the other side)
 	pd->position = (((transition_direction*2) + rd_size) % rd_size) + ((rd_size / 2) * (ivector2{ 1,1 } - abs(transition_direction)));
 	pd->position = pd->position - ivector2{ transition_direction.x == -1, transition_direction.y == -1 };
 	return new_room;
@@ -454,51 +397,69 @@ ivector2 game::handle_door_transition()
 
 void game::perform_player_attack()
 {
+	// get the arrow direction character for the player's direction
 	uint32_t c = direction_char(pd->direction);
 
 	ivector2 pos = pd->position;
+	ivector2 dir = direction(pd->direction);
+	// draw an attack graphic proportional to the player's range in the
+	// direction they are facing
 	for (unsigned int i = 0; i < pd->range + 1; i++)
 	{
 		if (pos.x <= 0 || pos.x >= rd_size.x - 1 || pos.y <= 0 || pos.y >= rd_size.y - 1) break;
 		rd->set_tile(layer::OVERLAY, pos, c);
 		if (is_goop_tile(rd->get_tile(layer::FOREGROUND, pos)))
 		{
+			// if the melee attack encountered goop, drop pickups
 			try_drop_pickup(pos, 0);
 			pd->goop_cleared++;
 		}
-		pos = pos + direction(pd->direction);
+		// increment pos based on facing direction
+		pos = pos + dir;
 	}
 }
 
 void game::perform_player_bomb()
 {
+	// if the player has no bombs, do nothing
 	if (pd->bombs <= 0) return;
+	// create a new bomb at the target position
 	bomb* b = new bomb();
 	b->position = pd->position + direction(pd->direction);
 	b->timer = 5;
+	// add it to the list
 	bombs.push_back(b);
+	// remove a bomb from the player
 	pd->bombs--;
 }
 
 void game::perform_player_barrier()
 {
+	// if the player doesn't have a barrier, do nothing
 	if (!pd->has_barrier) return;
 	ivector2 pos = pd->position;
+	ivector2 dir = direction(pd->direction);
 	while (pos.x < rd_size.x - 2 && pos.x > 1 && pos.y < rd_size.y - 2 && pos.y > 1)
 	{
+		// set the tile to be a barrier
 		rd->set_tile(layer::BACKGROUND, pos, BARRIER);
 		if (is_goop_tile(rd->get_tile(layer::FOREGROUND, pos)))
 		{
+			// destroy goop tiles if there are any on the foreground
+			// if destroyed by a barrier, goop shouldn't drop pickups
 			rd->set_tile(layer::FOREGROUND, pos, 0);
 			pd->goop_cleared++;
 		}
-		pos = pos + direction(pd->direction);
+		// increment the position by the direction
+		pos = pos + dir;
 	}
+	// remove the barrier from the player's inventory
 	pd->has_barrier = false;
 }
 
 ivector2 game::direction(int dir)
 {
+	// modulus maths to convert a direction to a unit ivector2
 	int ldir = dir % 4;
 	int bdir = ldir % 2;
 	int sdir = ((ldir / 2) * 2) - 1;
@@ -507,40 +468,53 @@ ivector2 game::direction(int dir)
 
 int game::direction(ivector2 dir)
 {
-	ivector2 mdir{ abs(dir.x), abs(dir.y) };
+	ivector2 mdir = abs(dir);
 	if (mdir.x > mdir.y)
 	{
+		// if X is dominant
 		if (dir.x > 0) return 1;
 		else return 3;
 	}
 	else if (mdir.x < mdir.y)
 	{
+		// if Y is dominant
 		if (dir.y > 0) return 2;
 		else return 0;
 	}
+	// otherwise assume up, since this function 
+	// should never be passed a zero ivector2
 	return 0;
 }
 
 uint32_t game::direction_char(int dir)
 {
-	uint32_t c = 0;
-	if (dir == 0) c = UP_ATTACK;
-	if (dir == 1) c = RIGHT_ATTACK;
-	if (dir == 2) c = DOWN_ATTACK;
-	if (dir == 3) c = LEFT_ATTACK;
-	return c;
+	switch (dir)
+	{
+	case 0:
+		return UP_ATTACK;
+	case 1:
+		return RIGHT_ATTACK;
+	case 2:
+		return DOWN_ATTACK;
+	case 3:
+		return LEFT_ATTACK;
+	}
 }
 
 void game::update_bombs()
 {
+	// backup list of bombs
 	vector<bomb*>* new_list = new vector<bomb*>();
 	new_list->reserve(bombs.size());
 	for (bomb* b : bombs)
 	{
-		// does modifying the list destroy the iterator? maybe!
-		// note from future me, yes, yes it very much does
+		// since modifying the list while iterating on it destroys the iterator
+		// we have to have a backing list and copy the ones we want to keep to it
+		// decrease the timer on each bomb
 		b->timer--;
+		// display timer
 		rd->set_tile(layer::FOREGROUND, b->position, b->timer + 0x30);
+		// if timer is zero, explode the bomb
 		if (b->timer == 0) explode_bomb(b->position, 4);
 		else new_list->push_back(b);
 	}
@@ -553,19 +527,25 @@ void game::update_bombs()
 
 void game::explode_bomb(ivector2 center, int radius)
 {
+	// clear bomb timer label
 	rd->set_tile(layer::FOREGROUND, center, 0);
+	// loop over a square block of tiles
 	for (int i = center.x - radius; i < center.x + radius; i++)
 	{
 		for (int j = center.y - radius; j < center.y + radius; j++)
 		{
 			ivector2 offset{ i - center.x, j - center.y };
+			// if the distance from the center is less than the desired radius
 			if (magnitude_squared(offset) < radius*radius)
 			{
+				// destroy goop, and drop pickups if goop was destroyed 
+				// at any particular tile
 				if (is_goop_tile(rd->get_tile(layer::FOREGROUND, ivector2{ i,j })))
 				{
 					try_drop_pickup(ivector2{ i,j }, 0);
 					pd->goop_cleared++;
 				}
+				// set the tile in the overlay to bomb explosions
 				rd->set_tile(layer::OVERLAY, ivector2{ i,j }, BOMB_EXPLOSION);
 			}
 		}
@@ -574,6 +554,7 @@ void game::explode_bomb(ivector2 center, int radius)
 
 void game::try_drop_pickup(ivector2 tile, uint32_t fallback)
 {
+	// drop a random pickup, or nothing, based on PRNG
 	double r = rp->next();
 	if (r < DROP_DIV_0) rd->set_tile(layer::FOREGROUND, tile, HEALTH_PICKUP);
 	else if (r < DROP_DIV_1) rd->set_tile(layer::FOREGROUND, tile, BOMB_PICKUP);
@@ -585,21 +566,22 @@ void game::try_drop_pickup(ivector2 tile, uint32_t fallback)
 
 void game::check_intersection()
 {
+	// get the tile under the player in the foreground
 	uint32_t tile = rd->get_tile(layer::FOREGROUND, pd->position);
 
-	// intersection with goop
+	// check intersection with goop
 	if (is_goop_tile(tile))
 	{
 		if (pd->invincibility_timer == 0)
 		{
 			pd->health--;
-			pd->invincibility_timer = 5;
+			pd->invincibility_timer = 3;
 		}
 	}
 
 	bool clear_tile = false;
 
-	// intersection with bomb pickup
+	// check intersection with bomb pickup
 	if (is_bomb_pickup(tile)) 
 	{
 		pd->bombs++; 
@@ -607,7 +589,7 @@ void game::check_intersection()
 		mh->append_line("BOMB COLLECTED");
 	}
 
-	// intersection with health pickup
+	// check intersection with health pickup
 	if (is_health_pickup(tile)) 
 	{ 
 		pd->health = clamp(pd->health + 3, 0, pd->max_health); 
@@ -616,7 +598,7 @@ void game::check_intersection()
 		mh->append_line("HEALTH REFILLED");
 	}
 
-	// intersection with max health upgrade
+	// check intersection with max health upgrade
 	if (is_health_upgrade(tile)) 
 	{ 
 		pd->max_health++; 
@@ -625,7 +607,7 @@ void game::check_intersection()
 		mh->append_line("MAX HEALTH INCREASED");
 	}
 
-	// intersection with range upgrade
+	// check intersection with range upgrade
 	if (is_range_upgrade(tile)) 
 	{ 
 		pd->range++; 
@@ -633,7 +615,7 @@ void game::check_intersection()
 		mh->append_line("SWORD RANGE INCREASED");
 	}
 
-	// intersection with barrier pickup
+	// check intersection with barrier pickup
 	if (is_barrier_pickup(tile)) 
 	{ 
 		pd->has_barrier = true; 
@@ -676,18 +658,27 @@ bool game::is_barrier_pickup(uint32_t tile)
 
 bool game::grow_goop_tiles()
 {
+	// precompute to save time
 	int rd_length = rd_size.x * rd_size.y;
+	int room_start = 2 + (rd_size.x * 2);
+	int room_end = rd_length - (2 + (rd_size.x * 2));
 	bool goop_seen = false;
-	for (int i = 2 + (rd_size.x*2); i < rd_length - (3 + (rd_size.x*2)); i++)
+	uint32_t tile_value;
+
+	// iterate over tiles in the buffer
+	for (int i = room_start; i < room_end; i++)
 	{
-		uint32_t tile_value = rd->get_tile(layer::FOREGROUND, i);
+		tile_value = rd->get_tile(layer::FOREGROUND, i);
+		// if the tile isn't goop, skip over it
 		if (!is_goop_tile(tile_value)) continue;
 		goop_seen = true;
+		// advance the goop tile
 		rd->set_tile(layer::FOREGROUND, i, advance_goop_tile(tile_value));
 		
+		// if we're on a certain goop state, and we get lucky, grow
 		if (tile_value == GOOP_2 && rp->next() < GOOP_GROW_CHANCE)
 		{
-			// grow into all adjacent tiles, as long as the background is empty
+			// get data about surrounding tiles
 			uint32_t bg_udlr[4] =
 			{
 				rd->get_tile(layer::BACKGROUND, i - rd_size.x),
@@ -703,9 +694,12 @@ bool game::grow_goop_tiles()
 				rd->get_tile(layer::FOREGROUND, i + 1)
 			};
 
+			// grow into all adjacent tiles, as long as the background 
+			// is empty, and the foreground isn't a goop tile, and the 
+			// targeted tile is in the range of the buffer
 			if (!is_goop_tile(fg_udlr[0]) && (bg_udlr[0] == ' ' || bg_udlr[0] == 0) && (i-rd_size.x >= rd_size.x*2))
 				rd->set_tile(layer::FOREGROUND, i - rd_size.x, GOOP_INIT);
-			if (!is_goop_tile(fg_udlr[1]) && (bg_udlr[1] == ' ' || bg_udlr[1] == 0) && (i+rd_size.x <= rd_length-(rd_size.x*3)))
+			if (!is_goop_tile(fg_udlr[1]) && (bg_udlr[1] == ' ' || bg_udlr[1] == 0) && (i+rd_size.x <= rd_length-(rd_size.x*2)))
 				rd->set_tile(layer::FOREGROUND, i + rd_size.x, GOOP_INIT);
 			if (!is_goop_tile(fg_udlr[2]) && (bg_udlr[2] == ' ' || bg_udlr[2] == 0) && ((i-1) % rd_size.x >= 2))
 				rd->set_tile(layer::FOREGROUND, i - 1, GOOP_INIT);
@@ -713,30 +707,37 @@ bool game::grow_goop_tiles()
 				rd->set_tile(layer::FOREGROUND, i + 1, GOOP_INIT);
 		}
 	}
+	// return whether the room is completely clear of goop
 	return !goop_seen;
 }
 
 void game::generate_fresh_goop(unsigned int room_layout_id, unsigned int max_goop_tiles)
 {
-	ivector2 rd_size = rd->get_size();
+	// calculate buffer length
 	unsigned int buffer_length = rd_size.x * rd_size.y;
 
-	vector<unsigned int> tiles_to_goopify;
+	// keeps a list of tiles which will be turned to goop
+	set<unsigned int> tiles_to_goopify;
 	while (tiles_to_goopify.size() < max_goop_tiles)
 	{
 		// pick a random tile
 		unsigned int test_tile = (int)(rp->next() * buffer_length);
 		// check that goop is allowed here
-		if (goop_gen_masks[room_layout_id][test_tile] == '1') tiles_to_goopify.push_back(test_tile);
+		if (goop_gen_masks[room_layout_id][test_tile] == '1') tiles_to_goopify.insert(test_tile);
 	}
 
-	for (unsigned int t : tiles_to_goopify) rd->set_tile(layer::FOREGROUND, t, GOOP_0);
+	// set the selected tiles to be goop
+	for (unsigned int t : tiles_to_goopify) rd->set_tile(layer::FOREGROUND, t, GOOP_INIT);
 
+	// iterate a few times so the goop looks like it's been here the whole time
 	for (int i = 0; i < GOOP_GEN_ITERATIONS; i++) grow_goop_tiles();
 }
 
 uint32_t game::advance_goop_tile(uint32_t current)
 {
+	// advance the state of a goop tile
+	// goop can have 4 different states, gives some variety
+	// and something to happen onscreen each turn
 	// ░ -> ▒
 	if (current == GOOP_0) return GOOP_1;
 	// ▒ -> ▓
@@ -749,6 +750,7 @@ uint32_t game::advance_goop_tile(uint32_t current)
 
 unsigned int game::calculate_score()
 {
+	// combine various player/game state attributes to compute the player's current score
 	return (unsigned int)max(0, (pd->goop_cleared * GOOP_SCORE_MULTIPLIER) 
 		 + (pd->turns * TURNS_SCORE_MULTIPLIER)
 		 + ((pd->max_health - PLAYER_INITIAL_HEALTH) * HEALTH_SCORE_MULTIPLIER)

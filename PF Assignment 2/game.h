@@ -47,11 +47,11 @@ struct key_states
 #define DROP_DIV_4 DROP_DIV_3 + BARRIER_PICKUP_CHANCE
 
 // probability that a goop tile will grow on a particular update
-#define GOOP_GROW_CHANCE 0.05
+#define GOOP_GROW_CHANCE 0.1
 // maximum amount of goop tiles allowed to spawn in a room, which gets increased as the game progresses
 #define MAX_GOOP_INITIAL 5
 // inital goop spawns in a room increase by 1/this as a factor of the player's goop_cleared property
-#define GOOP_CLEARING_RATIO 100
+#define GOOP_CLEARING_RATIO 80
 // how many times to grow the goop before the room is fully loaded
 #define GOOP_GEN_ITERATIONS 50
 
@@ -91,19 +91,33 @@ struct key_states
 class game
 {
 private:
-	ivector2 rd_size;
-	render_data* rd;
-	player_data* pd;
-	random_provider* rp;
-	message_history* mh;
-	ivector2 room;
-	vector<bomb*> bombs;
-	key_states ks;
+	// game state variables:
+	ivector2 rd_size;		// cached size of the room buffer
+	render_data* rd;		// handles drawing the game to the screen
+	player_data* pd;		// keeps track of player attributes and state
+	random_provider* rp;	// provides random number generation abstraction
+	message_history* mh;	// handles drawing a message history to the screen
+	ivector2 room;			// current room coordinates
+	vector<bomb*> bombs;	// list of bombs currently ticking, placed by the player
+	key_states ks;			// current state of all keys
+	// block of memory where room layouts are generated into and cached
+	// loaded into game background buffer as needed
 	uint32_t* room_designs[NUM_ROOM_LAYOUTS + 2] = { NULL };
+	// block of memory where transition frames are generated into and cached
+	// loaded into game overlay buffer when transitioning between rooms
 	uint32_t* transition_frames[NUM_TRANSITIONS] = { NULL };
+	// sorted set of rooms the player has cleared
+	// easy to check if an ivector2 is contained
 	set<ivector2> cleared_rooms;
+	// global seed offset for randomly generating room layouts/doorways
+	// also used to seed the random_provider
+	unsigned int global_seed;
 
+	// index of the player's controller
 	DWORD user_controller_index;
+
+	// show a set of 'slides' essentially to tell the player how to play
+	void perform_tutorial();
 
 	// draw doorways based on room position
 	void draw_doorways(ivector2);
