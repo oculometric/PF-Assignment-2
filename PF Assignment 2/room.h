@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "bomb.h"
 #include "ivector2.h"
 
 // large primes for generating seeds based on coordinates
@@ -52,21 +51,21 @@ static const char* room_tutorial =
 u8"                                             "
 u8" ▟▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▙ "
 u8" ▐                                         ▌ "
-u8" ▐  welcome, player!                       ▌ "
-u8" ▐  use the arrow keys to move             ▌ "
-u8" ▐  X to melee attack                      ▌ "
-u8" ▐  Z to place a bomb in front of you      ▌ "
+u8" ▐        ___    ___     ___    ___        ▌ "
+u8" ▐       / __|  / _ \\   / _ \\  |   \\       ▌ "
+u8" ▐      | (_ | | (_) | | (_) | | |) |      ▌ "
+u8" ▐       \\___|  \\___/   \\___/  |___/       ▌ "
 u8" ▐                                         ▌ "
-u8" ▐  this:     is goop, it hurts you        ▌ "
-u8" ▐  destroy it with melee or bombs         ▌ "
 u8" ▐                                         ▌ "
-u8" ▐  it also grows! but only when you move  ▌ "
-u8" ▐  or act. beware, and good luck!         ▌ "
-u8" ▐  use the doorways on the sides of the   ▌ "
-u8" ▐  room to navigate the maze              ▌ "
 u8" ▐                                         ▌ "
-u8" ▐  your stats: b - number of bombs,       ▌ "
-u8" ▐  r - melee range, i - invincible turns  ▌ "
+u8" ▐                                         ▌ "
+u8" ▐                                         ▌ "
+u8" ▐                                         ▌ "
+u8" ▐                                         ▌ "
+u8" ▐        _      _   _    ___   _  __      ▌ "
+u8" ▐       | |    | | | |  / __| | |/ /      ▌ "
+u8" ▐       | |__  | |_| | | (__  | ' <       ▌ "
+u8" ▐       |____|  \\___/   \\___| |_|\\_\\      ▌ "
 u8" ▐                                         ▌ "
 u8" ▜▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▛ "
 u8"                                             ";

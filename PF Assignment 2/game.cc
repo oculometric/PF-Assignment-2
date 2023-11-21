@@ -17,6 +17,7 @@ bool game::game_main(bool show_tutorial)
 {
 	// set up the terminal
 	system("chcp 65001");
+	system("cls");
 	hide_cursor();
 
 	// initial configuration
@@ -89,6 +90,9 @@ bool game::game_main(bool show_tutorial)
 	// load tutorial room
 	room_designs[NUM_ROOM_LAYOUTS] = new uint32_t[rd_size.x * rd_size.y];
 	read_multichars_to_buffer((char*)room_tutorial, room_designs[NUM_ROOM_LAYOUTS], false);
+
+	// if wanted, run the tutorial
+	if (show_tutorial) perform_tutorial();
 
 	// copy the tutorial room into the background buffer
 	rd->read_buffer(layer::BACKGROUND, room_designs[NUM_ROOM_LAYOUTS]);
@@ -268,6 +272,153 @@ bool game::game_main(bool show_tutorial)
 	}
 }
 
+void game::perform_tutorial()
+{
+	vector<string> text_0 =
+	{
+		"welcome adventurer!",
+		"the labyrinth has been overrun with",
+		"a strange and aggressive fungus",
+		"",
+		"it contains a deadly toxin, so avoid it!",
+		"",
+		"you have a few tools at your disposal:",
+		"  your sword (keyboard X or controller A)",
+		"  bombs (keyboard Z or controller B)",
+		"  a barrier (keyboard C or controller X)",
+		"",
+		"you can move around with arrow keys or",
+		"the D-pad.",
+		"",
+		"",
+		"",
+		"",
+		"         - press RIGHT to continue -        ",
+	};
+
+	vector<string> text_1 =
+	{
+		"this is what you look like -> @",
+		"",
+		"when you destroy a fungus tile, it may",
+		"drop a useful item, such as:",
+		"  health refill ->       #",
+		"  bomb pickup ->         *",
+		"  max health upgrade ->  +",
+		"  sword range upgrade -> ^",
+		"  barrier pickup ->      $",
+		"",
+		"before you begin your journey, remember:",
+		"  barriers will form a wall across the",
+		"  room, blocking the path of the fungi,",
+		"  however you can still walk across it",
+		"",
+		"  you can only hold one barrier",
+		"  at a time",
+		"",
+		"         - press RIGHT to continue -        "
+	};
+
+	vector<string> text_2 = 
+	{
+		"  bomb explosions don't harm you, but",
+		"  they explode in a large radius and",
+		"  destroy a lot of fungi in one go",
+		"",
+		"  be aware of your health in the top right",
+		"",
+		"  each time you move or act, the fungi may",
+		"  grow, but not when you turn on the spot",
+		"",
+		"the bottom of the screen also shows some",
+		"useful information:",
+		"  d - direction you are facing",
+		"  b - bombs held",
+		"  r - melee range",
+		"  i - invincible turns",
+		"  q - quarantine barriers held",
+		"",
+		"",
+		"         - press RIGHT to continue -        "
+	};
+
+	vector<string> text_3 =
+	{
+		"when you clear a room, no more fungi will",
+		"grow and the room will be safe from then on",
+		"",
+		"however if you leave a room uncleared, it",
+		"will reset if you leave and re-enter it!",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"best of luck adventurer. you may need it.",
+		"",
+		"",
+		"           - press RIGHT to begin -          "
+	};
+
+	// show screen 1
+	for (int i = 0; i < text_0.size(); i++)
+	{
+		rd->set_tiles(layer::OVERLAY, 1 + (rd_size.x * (i+1)), text_0[i], false);
+		rd->draw(cout);
+		this_thread::sleep_for(chrono::milliseconds(50));
+	}
+
+	// wait for user confirm
+	while (!ks.move_right) check_key_states();
+	ks.move_right = false;
+	rd->clear_layer(layer::OVERLAY);
+	
+	// show screen 2
+	for (int i = 0; i < text_1.size(); i++)
+	{
+		rd->set_tiles(layer::OVERLAY, 1 + (rd_size.x * (i + 1)), text_1[i], false);
+		rd->draw(cout);
+		this_thread::sleep_for(chrono::milliseconds(50));
+	}
+
+	// wait for user confirm
+	while (!ks.move_right) check_key_states();
+	ks.move_right = false;
+	rd->clear_layer(layer::OVERLAY);
+
+	// show screen 3
+	for (int i = 0; i < text_2.size(); i++)
+	{
+		rd->set_tiles(layer::OVERLAY, 1 + (rd_size.x * (i + 1)), text_2[i], false);
+		rd->draw(cout);
+		this_thread::sleep_for(chrono::milliseconds(50));
+	}
+
+	// wait for user confirm
+	while (!ks.move_right) check_key_states();
+	ks.move_right = false;
+	rd->clear_layer(layer::OVERLAY);
+
+	// show screen 4
+	for (int i = 0; i < text_3.size(); i++)
+	{
+		rd->set_tiles(layer::OVERLAY, 1 + (rd_size.x * (i + 1)), text_3[i], false);
+		rd->draw(cout);
+		this_thread::sleep_for(chrono::milliseconds(50));
+	}
+
+	// wait for user confirm
+	while (!ks.move_right) check_key_states();
+	ks.move_right = false;
+	rd->clear_layer(layer::OVERLAY);
+	rd->draw(cout);
+}
+
 void game::draw_doorways(ivector2 room_position)
 {
 	// get packed bools for whether or not to show particular doors
@@ -327,14 +478,14 @@ void game::update_overlay_text()
 void game::check_key_states()
 {
 	// check states of keyboard keys, resetting values in the struct
-	ks.move_up = GetAsyncKeyState(VK_UP) & 0x01;
-	ks.move_down = GetAsyncKeyState(VK_DOWN) & 0x01;
-	ks.move_left = GetAsyncKeyState(VK_LEFT) & 0x01;
-	ks.move_right = GetAsyncKeyState(VK_RIGHT) & 0x01;
+	ks.move_up = GetAsyncKeyState(VK_UP) & 0xFFF0;
+	ks.move_down = GetAsyncKeyState(VK_DOWN) & 0xFFF0;
+	ks.move_left = GetAsyncKeyState(VK_LEFT) & 0xFFF0;
+	ks.move_right = GetAsyncKeyState(VK_RIGHT) & 0xFFF0;
 
-	ks.attack = GetAsyncKeyState('X') & 0x01;
-	ks.alt_attack = GetAsyncKeyState('Z') & 0x01;
-	ks.barrier_attack = GetAsyncKeyState('C') & 0x01;
+	ks.attack = GetAsyncKeyState('X') & 0xFFF0;
+	ks.alt_attack = GetAsyncKeyState('Z') & 0xFFF0;
+	ks.barrier_attack = GetAsyncKeyState('C') & 0xFFF0;
 
 	// query controller state and OR those values onto the struct states
 	XINPUT_STATE controller_state;
@@ -524,6 +675,8 @@ uint32_t game::direction_char(int dir)
 		return DOWN_ATTACK;
 	case 3:
 		return LEFT_ATTACK;
+	default:
+		return NULL;
 	}
 }
 
