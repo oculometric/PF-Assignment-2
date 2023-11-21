@@ -14,7 +14,7 @@ void message_history::append_line(string new_line)
 	else
 	{
 		// if so, copy every line back by one
-		for (int i = 0; i < maximum_lines - 1; i++)
+		for (unsigned int i = 0; i < maximum_lines - 1; i++)
 		{
 			lines[i] = lines[i + 1];
 		}
@@ -35,14 +35,14 @@ void message_history::draw(ostream& out_stream)
 {
 	// set initial cursor position and draw header line
 	set_cursor_pos(drawing_start);
-	for (int j = 0; j < line_max_length; j++)
+	for (unsigned int j = 0; j < line_max_length; j++)
 		out_stream << '_';
 
 	// iterate over messages in buffer
-	for (int i = 0; i < maximum_lines; i++)
+	for (unsigned int i = 0; i < maximum_lines; i++)
 	{
 		// set cursor position to the start of the new line
-		set_cursor_pos(drawing_start + ivector2{ 0, i + 1 });
+		set_cursor_pos(drawing_start + ivector2{ 0, (int)i + 1 });
 		unsigned int line_length = 0;
 
 		// if the line should be highlighted, add a tag to it
@@ -54,13 +54,13 @@ void message_history::draw(ostream& out_stream)
 		if (i < lines_populated)
 		{
 			out_stream << lines[i];
-			line_length = lines[i].length();
+			line_length = (unsigned int)lines[i].length();
 		}
 		
 		// fill the rest (or the whole, if the line was unpopulated) of
 		// the line with spaces to clear any characters left over from
 		// scrolling the message history up
-		for (int j = line_length; j < line_max_length; j++)
+		for (unsigned int j = line_length; j < line_max_length; j++)
 			out_stream << ' ';
 	}
 }
