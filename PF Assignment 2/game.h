@@ -158,16 +158,20 @@ private:
 
 	// iterate over all goop tiles and try to grow them into adjacent tiles
 	bool grow_goop_tiles();
-	// generate a fresh room of goop for the player to fight. masked based on the room layout chosen
+	// generate a fresh room of goop for the player to fight
+	// masked based on the room layout chosen
 	void generate_fresh_goop(unsigned int, unsigned int);
 	// iterate to the next graphical version of a goop tile
 	static uint32_t advance_goop_tile(uint32_t);
 
-	// calculate the player's score based on their number of turns and number of goop tiles destroyed
+	// calculate the player's score based on their number of turns 
+	// and number of goop tiles destroyed, and some other stats
 	unsigned int calculate_score();
 public:
-	// where the mainloop of the game happens
-	void game_main();
+	// where the mainloop of the game happens, boolean param 
+	// for whether to play the tutorial or not, boolean return
+	// for whether the user wants to play again
+	bool game_main(bool);
 };
 
 // clamp an int between two other ints

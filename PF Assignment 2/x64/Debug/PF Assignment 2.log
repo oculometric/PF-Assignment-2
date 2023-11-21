@@ -1,2 +1,3 @@
 ﻿  game.cc
+C:\Users\maste\source\repos\PF Assignment 2\PF Assignment 2\game.cc(525): warning C4715: 'game::direction_char': not all control paths return a value
   PF Assignment 2.vcxproj -> C:\Users\maste\source\repos\PF Assignment 2\x64\Debug\PF Assignment 2.exe

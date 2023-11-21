@@ -13,7 +13,7 @@
 
 using namespace std;
 
-void game::game_main()
+bool game::game_main(bool show_tutorial)
 {
 	// set up the terminal
 	system("chcp 65001");
@@ -217,9 +217,11 @@ void game::game_main()
 	
 	string text_1 = "GAME OVER : SCORE " + to_string(calculate_score());
 	string text_2 = "YOU ARE DEAD";
+	string text_3 = "PRESS LEFT TO EXIT, RIGHT TO PLAY AGAIN";
 	mh->append_line("GAME OVER");
 	rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)(text_1.size() / 2), rd_center.y - 1 }, text_1, false);
 	rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)(text_2.size() / 2), rd_center.y + 1 }, text_2, false);
+	rd->set_tiles(layer::OVERLAY, ivector2{ rd_center.x - (int)(text_3.size() / 2), rd_center.y + 3 }, text_3, false);
 	rd->draw(cout);
 	mh->draw(cout);
 
@@ -238,8 +240,32 @@ void game::game_main()
 		rd->draw(cout);
 	}
 
-	// halt the program, so the user can see their score
-	while (true);
+	while (true)
+	{
+		// wait for player to press a key
+		ks.any = false;
+		while (!ks.any) check_key_states();
+
+		// deallocate everything allocated in this function
+		delete rd;
+		delete pd;
+		delete rp;
+		delete mh;
+		
+		for (bomb* b : bombs) delete b;
+		bombs.clear();
+		for (int i = 0; i < NUM_ROOM_LAYOUTS+2; i++)
+			delete room_designs[i];
+		for (int i = 0; i < NUM_TRANSITIONS; i++)
+			delete transition_frames[i];
+
+		cleared_rooms.clear();
+
+		// if the player pressed right, play again
+		if (ks.move_right) return true;
+		// if left, stop the program
+		if (ks.move_left) return false;
+	}
 }
 
 void game::draw_doorways(ivector2 room_position)
