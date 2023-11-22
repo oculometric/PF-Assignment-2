@@ -1,5 +1,6 @@
 # Programming Fundamentals Assignment 2
 
+```
         ,.                                 
        / |   ,-. ,-. ,-. . ,-. . . ,-.     
       /--|-. | | ,-| |   | |   | | `-.     
@@ -19,7 +20,7 @@
               /     /                     
              /  /   |                     
             |  '  | \\                     
-
+```
 welcome adventurer!
 the labyrinth has been overrun with
 a strange and aggressive fungus
