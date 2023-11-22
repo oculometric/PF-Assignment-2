@@ -271,6 +271,33 @@ bool game::game_main(bool show_tutorial)
 
 void game::perform_tutorial()
 {
+	// 'Agaricus Obscura' ASCII art generated with
+	// https://patorjk.com/software/taag, Stampate font
+	// Mushroom graphic ASCII art created by me
+	vector<string> title =
+	{
+		"___________________________________________",
+		"        ,.                                 ",
+		"       / |   ,-. ,-. ,-. . ,-. . . ,-.     ",
+		"      /--|-. | | ,-| |   | |   | | `-.     ",
+		"    ,'   `-' `-| `-^ '   ' `-' `-' `-'     ",
+		"              ,|                           ",
+		"              `'                           ",
+		"    ,---. .                                ",
+		"    |   | |-. ,-. ,-. . . ,-. ,-.          ",
+		"    |   | | | `-. |   | | |   ,-|          ",
+		"    `---' `-' `-' `-' `-' '   `-^          ",
+		"",
+		"             _....------...,               ",
+		"         ,'''    * .     .  \\              ",
+		"        |   *  .      *      |             ",
+		"        \\...____,_____,  .  /              ",
+		"               / '   /^^---'               ",
+		"              /     /                      ",
+		"             /  /   |                      ",
+		"            |  '  | \\                      ",
+	};
+
 	vector<string> text_0 =
 	{
 		"welcome adventurer!",
@@ -361,6 +388,16 @@ void game::perform_tutorial()
 		"",
 		"           - press RIGHT to begin -          "
 	};
+
+	// show title
+	for (int i = 0; i < title.size(); i++)
+	{
+		rd->set_tiles(layer::OVERLAY, 1 + (rd_size.x * (i + 1)), title[i], false);
+		rd->draw(cout);
+		this_thread::sleep_for(chrono::milliseconds(50));
+	}
+	this_thread::sleep_for(chrono::seconds(3));
+	rd->clear_layer(layer::OVERLAY);
 
 	// show screen 1
 	for (int i = 0; i < text_0.size(); i++)
@@ -941,5 +978,5 @@ unsigned int game::calculate_score()
 		 + (pd->turns * TURNS_SCORE_MULTIPLIER)
 		 + ((pd->max_health - PLAYER_INITIAL_HEALTH) * HEALTH_SCORE_MULTIPLIER)
 		 + ((pd->range - PLAYER_INITIAL_RANGE) * RANGE_SCORE_MULTIPLER)
-		 + (cleared_rooms.size() * ROOMS_SCORE_MULTIPLIER)) + 99999999;
+		 + (cleared_rooms.size() * ROOMS_SCORE_MULTIPLIER));
 }
