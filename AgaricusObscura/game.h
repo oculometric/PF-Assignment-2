@@ -25,6 +25,11 @@ struct key_states
 	bool any;
 };
 
+// gameplay room size. these are pretty much fixed by the room layouts
+#define RENDER_DATA_SIZE_X 45
+#define RENDER_DATA_SIZE_Y 21
+#define MESSAGE_HISTORY_WIDTH 32
+
 // player capability initial constants
 #define PLAYER_INITIAL_HEALTH 5
 #define PLAYER_INITIAL_RANGE 2
@@ -35,10 +40,10 @@ struct key_states
 
 // probability definitions for different types of item dropped by goop when it dies
 #define HEALTH_PICKUP_CHANCE 0.02
-#define BOMB_PICKUP_CHANCE 0.04
+#define BOMB_PICKUP_CHANCE 0.035
 #define HEALTH_UPGRADE_CHANCE 0.004
 #define RANGE_UPGRADE_CHANCE 0.002
-#define BARRIER_PICKUP_CHANCE 0.02
+#define BARRIER_PICKUP_CHANCE 0.015
 
 #define DROP_DIV_0 HEALTH_PICKUP_CHANCE
 #define DROP_DIV_1 DROP_DIV_0 + BOMB_PICKUP_CHANCE
@@ -56,18 +61,23 @@ struct key_states
 #define GOOP_GEN_ITERATIONS 50
 
 // definitions for character symbols representing different game elements
-#define UP_ATTACK 0xe2afad
-#define DOWN_ATTACK 0xe2afaf
-#define LEFT_ATTACK 0xe2afac
-#define RIGHT_ATTACK 0xe2afae
+#define UP_ATTACK 0xE29482
+#define DOWN_ATTACK 0xE29482
+#define LEFT_ATTACK 0xE29480
+#define RIGHT_ATTACK 0xE29480
 
-#define GOOP_0 0xe2b8ab
-#define GOOP_1 0xe2b8ac
-#define GOOP_2 0xe2b8ad
-#define GOOP_INIT 0xe2b8aa
+#define UP_FACING 0xE295A7
+#define DOWN_FACING 0xE295A4
+#define LEFT_FACING 0xE295A2
+#define RIGHT_FACING 0xE2959f
+
+#define GOOP_0 '.'
+#define GOOP_1 ':'
+#define GOOP_2 ';'
+#define GOOP_INIT ','
 
 #define BOMB_EXPLOSION '%'
-#define BARRIER 0xe29692
+#define BARRIER 0xE29692
 #define PLAYER '@'
 #define HEALTH_PICKUP '#'
 #define HEALTH_UPGRADE '+'
@@ -75,8 +85,8 @@ struct key_states
 #define RANGE_UPGRADE '^'
 #define BARRIER_PICKUP '$'
 
-#define FILLED_HEART 0xe299a5
-#define EMPTY_HEART 0xe299a1
+#define FILLED_HEART 0xE299A5
+#define EMPTY_HEART '_'
 
 #define BLOCK 0xe29688
 
@@ -93,6 +103,7 @@ class game
 private:
 	// game state variables:
 	ivector2 rd_size;		// cached size of the room buffer
+	ivector2 rd_offset;		// drawing offset for the room
 	render_data* rd;		// handles drawing the game to the screen
 	player_data* pd;		// keeps track of player attributes and state
 	random_provider* rp;	// provides random number generation abstraction
@@ -137,7 +148,7 @@ private:
 	// converting between direction formats
 	static ivector2 direction(int);
 	static int direction(ivector2);
-	static uint32_t direction_char(int);
+	static uint32_t direction_char(int, bool);
 
 	// update all the bombs in a list (reducing their timers, drawing them to the render buffer)
 	void update_bombs();

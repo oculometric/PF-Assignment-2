@@ -22,7 +22,7 @@ bool game::game_main(bool show_tutorial)
 
 	// initial configuration
 	global_seed		= (unsigned int)chrono::high_resolution_clock::now().time_since_epoch().count();
-	rd_size			= ivector2{ 45, 21 };
+	rd_size			= ivector2{ RENDER_DATA_SIZE_X, RENDER_DATA_SIZE_Y };
 	rd				= new render_data(rd_size);
 	pd				= new player_data();
 	room			= ivector2{ 0, 0 }; cleared_rooms.insert(ivector2{ 0, 0 });
@@ -55,10 +55,10 @@ bool game::game_main(bool show_tutorial)
 		csbi.srWindow.Bottom - csbi.srWindow.Top + 1 
 	};
 
-	ivector2 graphics_offset = (terminal_size_characters / 2) - rd_center;
-	rd->set_draw_offset(graphics_offset);
+	rd_offset = (terminal_size_characters / 2) - rd_center;
+	rd->set_draw_offset(rd_offset);
 
-	mh = new message_history(ivector2{ graphics_offset.x + rd_size.x, graphics_offset.y + 1 }, rd_size.y - 5, 32);
+	mh = new message_history(ivector2{ rd_offset.x + rd_size.x, rd_offset.y + 1 }, rd_size.y - 5, MESSAGE_HISTORY_WIDTH);
 
 	// set up controller
 	user_controller_index = -1;
@@ -198,9 +198,6 @@ bool game::game_main(bool show_tutorial)
 
 		// reset cursor and draw screen
 		rd->draw(cout);
-		string score_text = " score : " + to_string(calculate_score()) + " (" + to_string(pd->turns) + " turns, " + to_string(cleared_rooms.size()) + " rooms cleared)";
-		cout << score_text;
-		for (int i = 0; i < rd_size.x - score_text.size(); i++) cout << ' ';
 		mh->draw(cout);
 
 		// break out if the player is dead
@@ -472,7 +469,14 @@ void game::update_overlay_text()
 	// bottom text: various stats
 	string bottom = " d :   | b : " + to_string(pd->bombs) + " | r : " + to_string(pd->range) + " | i : " + to_string(pd->invincibility_timer) + " | q : " + to_string(pd->has_barrier ? 1 : 0);
 	rd->set_tiles(layer::OVERLAY, rd_size.x * (rd_size.y - 1), bottom, false);
-	rd->set_tile(layer::OVERLAY, (rd_size.x * (rd_size.y - 1)) + 5, direction_char(pd->direction));
+	rd->set_tile(layer::OVERLAY, (rd_size.x * (rd_size.y - 1)) + 5, direction_char(pd->direction, true));
+
+	// extra score info
+	string score_text = " score : " + to_string(calculate_score()) + " (" + to_string(pd->turns) + " turns, " + to_string(cleared_rooms.size()) + " rooms cleared)";
+	set_cursor_pos(ivector2{ rd_offset.x, rd_offset.y + rd_size.y });
+	cout << score_text;
+	int num_fillers = (rd_size.x + MESSAGE_HISTORY_WIDTH) - score_text.size();
+	if (num_fillers > 0) for (int i = 0; i < num_fillers; i++) cout << ' ';
 }
 
 void game::check_key_states()
@@ -581,7 +585,7 @@ ivector2 game::handle_door_transition()
 void game::perform_player_attack()
 {
 	// get the arrow direction character for the player's direction
-	uint32_t c = direction_char(pd->direction);
+	uint32_t c = direction_char(pd->direction, false);
 
 	ivector2 pos = pd->position;
 	ivector2 dir = direction(pd->direction);
@@ -669,18 +673,18 @@ int game::direction(ivector2 dir)
 	return 0;
 }
 
-uint32_t game::direction_char(int dir)
+uint32_t game::direction_char(int dir, bool facing)
 {
 	switch (dir)
 	{
 	case 0:
-		return UP_ATTACK;
+		return facing ? UP_FACING : UP_ATTACK;
 	case 1:
-		return RIGHT_ATTACK;
+		return facing ? RIGHT_FACING : RIGHT_ATTACK;
 	case 2:
-		return DOWN_ATTACK;
+		return facing ? DOWN_FACING : DOWN_ATTACK;
 	case 3:
-		return LEFT_ATTACK;
+		return facing ? LEFT_FACING : LEFT_ATTACK;
 	default:
 		return NULL;
 	}
@@ -923,11 +927,8 @@ uint32_t game::advance_goop_tile(uint32_t current)
 	// advance the state of a goop tile
 	// goop can have 4 different states, gives some variety
 	// and something to happen onscreen each turn
-	// ░ -> ▒
 	if (current == GOOP_0) return GOOP_1;
-	// ▒ -> ▓
 	if (current == GOOP_1) return GOOP_2;
-	// ▓ -> ░
 	if (current == GOOP_2 || current == GOOP_INIT) return GOOP_0;
 
 	return 0;
@@ -940,5 +941,5 @@ unsigned int game::calculate_score()
 		 + (pd->turns * TURNS_SCORE_MULTIPLIER)
 		 + ((pd->max_health - PLAYER_INITIAL_HEALTH) * HEALTH_SCORE_MULTIPLIER)
 		 + ((pd->range - PLAYER_INITIAL_RANGE) * RANGE_SCORE_MULTIPLER)
-		 + (cleared_rooms.size() * ROOMS_SCORE_MULTIPLIER));
+		 + (cleared_rooms.size() * ROOMS_SCORE_MULTIPLIER)) + 99999999;
 }
