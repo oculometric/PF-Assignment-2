@@ -1,3 +1,5 @@
+before:
+
 setup -       49331000
 buffers -        85900
 draw -    202057459800
@@ -10,7 +12,9 @@ overlay -     86927700
 cleared rooms - 4
 turns - 1598
 draw/turn - 126443967 (126 ms)
+actions/turn - 9878809 (10ms)
 
+after:
 
 setup -       54219300
 buffers -       130000
@@ -24,3 +28,4 @@ overlay -     72377500
 cleared rooms - 10
 turns - 1908
 draw/turn - 19739333 (19ms)
+actions/turn - 16263946 (16ms)

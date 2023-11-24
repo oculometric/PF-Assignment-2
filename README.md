@@ -76,4 +76,4 @@ will reset if you leave and re-enter it!
 
 best of luck adventurer. you may need it.
 
-**to play, download the released EXE file and run it.**
+**to play, download the released EXE file and run it, or open the VS project**
